@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Royal Square — Your financial life, one place</title>
+    <meta name="description" content="Royal Square client platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div id="shell">
+      <aside id="sidebar">
+        <div class="brand">
+          <div class="mark">Royal Square<br />Financial</div>
+          <div class="sub">Client &amp; Adviser Platform</div>
+          <div class="reg">FSP 29370 · Qiniso Ntuli, Director<br />4 Pritchard Street, Johannesburg</div>
+        </div>
+        <nav class="tabs" id="navTabs" aria-label="Primary navigation"></nav>
+        <div class="side-foot">
+          <div class="role-switch" id="roleSwitch">
+            <button type="button" data-role="adviser">Adviser</button>
+            <button type="button" data-role="client" class="active">Client</button>
+          </div>
+          <select class="client-select" id="clientSelect" aria-label="Select client">
+            <option>Samukelisiwe</option>
+            <option>Thandiwe Nkosi</option>
+            <option>Marc van der Merwe</option>
+            <option>Naledi Dlamini</option>
+          </select>
+        </div>
+      </aside>
+
+      <div id="main">
+        <div id="topbar">
+          <div>
+            <div class="title" id="pageTitle">Dashboard</div>
+            <div class="meta" id="pageMeta">Client overview</div>
+          </div>
+          <div id="topbarRight"></div>
+        </div>
+        <main id="app"></main>
+      </div>
+    </div>
+
+    <nav class="bottom-nav" aria-label="Mobile navigation">
+      <a href="/" data-nav="home"><span>⌂</span>Home</a>
+      <a href="/documents" data-nav="documents"><span>▧</span>Documents</a>
+      <a href="/help" data-nav="help"><span>✥</span>Get help</a>
+      <a href="/adviser" data-nav="adviser"><span>◯</span>Adviser</a>
+    </nav>
+    <div id="toast" role="status" aria-live="polite"></div>
+    <script src="/app.js"></script>
+  </body>
+</html>

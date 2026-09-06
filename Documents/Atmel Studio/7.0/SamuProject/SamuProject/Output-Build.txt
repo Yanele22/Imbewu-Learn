@@ -1,0 +1,35 @@
+﻿------ Build started: Project: SamuProject, Configuration: Debug AVR ------
+Build started.
+Project "SamuProject.cproj" (default targets):
+Target "PreBuildEvent" skipped, due to false condition; ('$(PreBuildEvent)'!='') was evaluated as (''!='').
+Target "CoreBuild" in file "C:\Program Files (x86)\Atmel\Studio\7.0\Vs\Compiler.targets" from project "C:\Users\samke\Documents\Atmel Studio\7.0\SamuProject\SamuProject\SamuProject.cproj" (target "Build" depends on it):
+	Task "RunCompilerTask"
+		Shell Utils Path C:\Program Files (x86)\Atmel\Studio\7.0\shellUtils
+		C:\Program Files (x86)\Atmel\Studio\7.0\shellUtils\make.exe all --jobs 4 --output-sync 
+		Building file: .././main.c
+		Invoking: XC8 C Compiler : 2.36
+		"C:\Program Files\Microchip\xc8\v2.36\bin\xc8-cc.exe"  -mcpu=ATmega328P  -mdfp="C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\xc8"  -c -x c -funsigned-char -funsigned-bitfields -mext=cci -D__ATmega328P__ -DDEBUG  -Og -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g2 -Wall -MD -MP -MF "main.d" -MT"main.d" -MT"main.o"   -o "main.o" ".././main.c" 
+		Finished building: .././main.c
+		Building target: SamuProject.elf
+		Invoking:  XC8 C Linker : 2.36
+		"C:\Program Files\Microchip\xc8\v2.36\bin\xc8-cc.exe" -o SamuProject.elf  main.o   -mcpu=ATmega328P  -mdfp="C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\xc8"  -Wl,-Map="SamuProject.map" -funsigned-char -funsigned-bitfields -Wl,--start-group -Wl,-lm  -Wl,--end-group -Wl,--gc-sections -Og -ffunction-sections -fdata-sections -fpack-struct -fshort-enums --memorysummary,memoryfile.xml  
+		Info: Loading file: c:\program files\microchip\xc8\v2.36\avr\avr\bin\../lib\ldscripts/avr5.xn
+		Finished building target: SamuProject.elf
+		"C:\Program Files\Microchip\xc8\v2.36\bin\avr-objcopy.exe" -O ihex -R .eeprom -R .fuse -R .lock -R .signature -R .user_signatures  "SamuProject.elf" "SamuProject.hex"
+		"C:\Program Files\Microchip\xc8\v2.36\bin\avr-objcopy.exe" -j .eeprom --set-section-flags=.eeprom=alloc,load --change-section-lma .eeprom=0 --no-change-warnings -O ihex "SamuProject.elf" "SamuProject.eep" || exit 0
+		"C:\Program Files\Microchip\xc8\v2.36\bin\avr-objdump.exe" -h -S "SamuProject.elf" > "SamuProject.lss"
+	Done executing task "RunCompilerTask".
+	Using "RunOutputFileVerifyTask" task from assembly "C:\Program Files (x86)\Atmel\Studio\7.0\Extensions\Application\AvrGCC.dll".
+	Task "RunOutputFileVerifyTask"
+				Program Memory Usage 	:	7821 bytes   23,9 % Full
+				Data Memory Usage 		:	2 bytes   0,1 % Full
+				Warning: Memory Usage estimation may not be accurate if there are sections other than .text sections in ELF file
+	Done executing task "RunOutputFileVerifyTask".
+Done building target "CoreBuild" in project "SamuProject.cproj".
+Target "PostBuildEvent" skipped, due to false condition; ('$(PostBuildEvent)' != '') was evaluated as ('' != '').
+Target "Build" in file "C:\Program Files (x86)\Atmel\Studio\7.0\Vs\Avr.common.targets" from project "C:\Users\samke\Documents\Atmel Studio\7.0\SamuProject\SamuProject\SamuProject.cproj" (entry point):
+Done building target "Build" in project "SamuProject.cproj".
+Done building project "SamuProject.cproj".
+
+Build succeeded.
+========== Build: 1 succeeded or up-to-date, 0 failed, 0 skipped ==========

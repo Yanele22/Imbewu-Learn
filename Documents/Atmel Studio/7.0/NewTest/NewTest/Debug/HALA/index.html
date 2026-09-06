@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Royal Square Financial — Client Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#182B21;
+    --ink-soft:#2A4034;
+    --paper:#EEF1EC;
+    --paper-raised:#F8F9F6;
+    --line:rgba(24,43,33,0.14);
+    --line-strong:rgba(24,43,33,0.28);
+    --brass:#A6793D;
+    --brass-soft:#D8BE8C;
+    --wine:#7A2E2E;
+    --wine-soft:#F1DCDA;
+    --sage:#4B6C53;
+    --sage-soft:#DCE7DE;
+    --slate:#5B6B62;
+    --white:#fff;
+    --radius:3px;
+    --shadow:none;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{
+    font-family:'Newsreader', serif;
+    font-weight:500;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  .num{font-family:'IBM Plex Mono', monospace; font-variant-numeric:tabular-nums;}
+  a{color:inherit;}
+  button{font-family:inherit; cursor:pointer;}
+  ::selection{background:var(--brass-soft);}
+
+  /* ---------- SHELL ---------- */
+  #shell{display:flex; min-height:100vh;}
+  #sidebar{
+    width:236px; flex:none; background:var(--ink); color:var(--paper-raised);
+    display:flex; flex-direction:column; padding:28px 0 18px;
+    position:sticky; top:0; height:100vh;
+  }
+  .brand{padding:0 22px 22px; border-bottom:1px solid rgba(255,255,255,0.12); margin-bottom:14px;}
+  .brand .mark{font-family:'Newsreader', serif; font-size:20px; font-weight:500; line-height:1.15; color:var(--white);}
+  .brand .sub{font-size:10.5px; color:var(--brass-soft); margin-top:6px; letter-spacing:.02em;}
+  .brand .reg{font-size:9.5px; color:rgba(255,255,255,0.4); margin-top:10px; line-height:1.5;}
+
+  nav.tabs{display:flex; flex-direction:column; gap:1px; padding:6px 10px;}
+  nav.tabs button{
+    all:unset; display:flex; align-items:center; gap:10px;
+    padding:10px 12px; border-radius:2px; color:rgba(255,255,255,0.68);
+    font-size:13px; cursor:pointer; position:relative;
+  }
+  nav.tabs button svg{flex:none; opacity:0.85;}
+  nav.tabs button:hover{background:rgba(255,255,255,0.06); color:#fff;}
+  nav.tabs button.active{background:rgba(166,121,61,0.18); color:#fff;}
+  nav.tabs button.active::before{
+    content:''; position:absolute; left:-10px; top:6px; bottom:6px; width:3px; background:var(--brass);
+  }
+  .tab-count{
+    margin-left:auto; font-family:'IBM Plex Mono',monospace; font-size:10.5px;
+    background:rgba(255,255,255,0.12); padding:1px 6px; border-radius:8px;
+  }
+
+  .side-foot{margin-top:auto; padding:16px 22px 0; border-top:1px solid rgba(255,255,255,0.12);}
+  .role-switch{display:flex; gap:0; margin-bottom:12px; border:1px solid rgba(255,255,255,0.2); border-radius:3px; overflow:hidden;}
+  .role-switch button{all:unset; flex:1; text-align:center; padding:7px 4px; font-size:11.5px; color:rgba(255,255,255,0.55); cursor:pointer;}
+  .role-switch button.active{background:var(--brass); color:#1B2318; font-weight:600;}
+  .client-select{width:100%; background:rgba(255,255,255,0.07); color:#fff; border:1px solid rgba(255,255,255,0.18);
+    border-radius:3px; padding:7px 8px; font-size:12px; font-family:inherit;}
+  .client-select option{color:#111;}
+
+  #main{flex:1; min-width:0; display:flex; flex-direction:column;}
+  #topbar{
+    padding:20px 36px; border-bottom:1px solid var(--line); display:flex; align-items:baseline;
+    justify-content:space-between; background:var(--paper-raised);
+  }
+  #topbar .title{font-size:24px;}
+  #topbar .meta{font-size:12px; color:var(--slate);}
+  #content{padding:30px 36px 60px; max-width:1180px;}
+
+  /* ---------- PRIMITIVES ---------- */
+  .panel{
+    background:var(--paper-raised); border:1px solid var(--line); border-radius:var(--radius);
+    padding:22px 24px;
+  }
+  .panel + .panel{margin-top:16px;}
+  .grid{display:grid; gap:16px;}
+  .grid-2{grid-template-columns:1.3fr 1fr;}
+  .grid-3{grid-template-columns:repeat(3,1fr);}
+  .eyebrow-off{ } /* deliberately no all-caps eyebrows per style guidance */
+  .label{font-size:11.5px; color:var(--slate);}
+  .hr{height:1px; background:var(--line); border:0; margin:16px 0;}
+
+  .stat-row{display:flex; align-items:flex-end; justify-content:space-between; gap:20px; flex-wrap:wrap;}
+  .stat{}
+  .stat .v{font-family:'IBM Plex Mono',monospace; font-size:28px; font-weight:500; letter-spacing:-0.01em;}
+  .stat .l{font-size:12px; color:var(--slate); margin-top:2px;}
+  .stat.up .v{color:var(--sage);}
+  .stat.down .v{color:var(--wine);}
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{ text-align:left; font-weight:500; color:var(--slate); font-size:11.5px; padding:8px 10px; border-bottom:1px solid var(--line-strong);}
+  td{padding:10px 10px; border-bottom:1px solid var(--line); vertical-align:middle;}
+  tr:last-child td{border-bottom:0;}
+  td.num, th.num{text-align:right; font-family:'IBM Plex Mono',monospace;}
+
+  .pill{display:inline-block; padding:2.5px 9px; border-radius:20px; font-size:11px; font-weight:500;}
+  .pill.active{background:var(--sage-soft); color:var(--sage);}
+  .pill.due{background:var(--wine-soft); color:var(--wine);}
+  .pill.pending{background:#EDE6D6; color:var(--brass);}
+  .pill.both{background:#E4E8F0; color:#40506B;}
+
+  .btn{
+    display:inline-flex; align-items:center; gap:7px; border:1px solid var(--ink); background:var(--ink);
+    color:#fff; padding:9px 16px; border-radius:3px; font-size:13px; font-weight:500;
+  }
+  .btn:hover{background:var(--ink-soft);}
+  .btn.secondary{background:transparent; color:var(--ink); border:1px solid var(--line-strong);}
+  .btn.secondary:hover{border-color:var(--ink);}
+  .btn.small{padding:6px 11px; font-size:12px;}
+  .btn.wine{background:var(--wine); border-color:var(--wine);}
+
+  .card-btn{
+    text-align:left; border:1px solid var(--line); background:var(--paper-raised); border-radius:var(--radius);
+    padding:16px 16px; display:flex; flex-direction:column; gap:6px; width:100%;
+  }
+  .card-btn:hover{border-color:var(--brass); background:#FBF8F2;}
+  .card-btn .t{font-family:'Newsreader',serif; font-size:16px;}
+  .card-btn .d{font-size:12px; color:var(--slate);}
+
+  /* progress bars */
+  .goal{padding:16px 0; border-bottom:1px solid var(--line);}
+  .goal:last-child{border-bottom:0;}
+  .goal-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; gap:12px; flex-wrap:wrap;}
+  .goal-name{font-family:'Newsreader',serif; font-size:16.5px;}
+  .goal-tag{font-size:10.5px; padding:2px 7px; border-radius:20px; border:1px solid var(--line-strong); color:var(--slate); margin-left:8px;}
+  .goal-amounts{font-size:12.5px; color:var(--slate); font-family:'IBM Plex Mono',monospace;}
+  .bar-track{height:8px; background:#E2E6DE; border-radius:20px; overflow:hidden;}
+  .bar-fill{height:100%; background:var(--brass); border-radius:20px;}
+  .goal-foot{display:flex; justify-content:space-between; margin-top:6px; font-size:11.5px; color:var(--slate);}
+
+  /* claims pipeline */
+  .pipeline{display:flex; flex-direction:column;}
+  .pstep{display:flex; gap:14px; padding:11px 0; position:relative;}
+  .pstep .dot-col{display:flex; flex-direction:column; align-items:center; width:18px; flex:none;}
+  .pstep .dot{width:11px; height:11px; border-radius:50%; background:var(--line-strong); border:2px solid var(--paper-raised); z-index:1;}
+  .pstep.done .dot{background:var(--sage);}
+  .pstep.current .dot{background:var(--brass); box-shadow:0 0 0 4px rgba(166,121,61,0.22);}
+  .pstep .stem{flex:1; width:1.5px; background:var(--line-strong); margin-top:2px;}
+  .pstep.done .stem{background:var(--sage);}
+  .pstep:last-child .stem{display:none;}
+  .pstep .body{flex:1; padding-bottom:2px;}
+  .pstep .st{font-size:13.5px; font-weight:500;}
+  .pstep.done .st{color:var(--slate);}
+  .pstep.current .st{color:var(--ink);}
+  .pstep .sd{font-size:12px; color:var(--slate); margin-top:2px;}
+
+  /* checklist */
+  .check-item{display:flex; align-items:flex-start; gap:10px; padding:9px 0; border-bottom:1px solid var(--line);}
+  .check-item:last-child{border-bottom:0;}
+  .check-item input{margin-top:3px; width:15px; height:15px; accent-color:var(--brass);}
+  .check-item label{font-size:13.5px;}
+
+  /* modal */
+  .overlay{position:fixed; inset:0; background:rgba(20,28,22,0.5); display:none; align-items:flex-start; justify-content:center; z-index:50; padding:48px 20px; overflow:auto;}
+  .overlay.open{display:flex;}
+  .modal{background:var(--paper-raised); width:100%; max-width:640px; border-radius:4px; border:1px solid var(--line-strong);}
+  .modal-head{padding:18px 24px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center;}
+  .modal-head h3{font-size:19px;}
+  .modal-close{all:unset; cursor:pointer; font-size:20px; color:var(--slate); padding:4px 8px;}
+  .modal-body{padding:20px 24px 24px; max-height:70vh; overflow:auto;}
+  .modal-foot{padding:16px 24px; border-top:1px solid var(--line); display:flex; justify-content:flex-end; gap:10px;}
+
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:12px; color:var(--slate); margin-bottom:5px;}
+  .field input, .field select, .field textarea{
+    width:100%; border:1px solid var(--line-strong); border-radius:3px; padding:9px 10px; font-size:13.5px; font-family:inherit;
+    background:#fff; color:var(--ink);
+  }
+  .field textarea{resize:vertical; min-height:64px;}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+
+  .badge-dot{width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:6px;}
+  .provider-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
+  .provider{border:1px solid var(--line); border-radius:3px; padding:12px 13px; display:flex; flex-direction:column; gap:5px;}
+  .provider .pname{font-weight:600; font-size:13.5px;}
+  .provider .pstatus{font-size:11.5px; color:var(--slate); display:flex; align-items:center;}
+
+  .toast{position:fixed; bottom:22px; right:22px; background:var(--ink); color:#fff; padding:12px 18px; border-radius:4px;
+    font-size:13px; z-index:80; opacity:0; transform:translateY(8px); transition:opacity .25s, transform .25s; pointer-events:none;}
+  .toast.show{opacity:1; transform:translateY(0);}
+
+  .step-wizard-nav{display:flex; gap:6px; margin-bottom:18px;}
+  .swn-item{flex:1; height:3px; background:var(--line-strong); border-radius:2px;}
+  .swn-item.active{background:var(--brass);}
+
+  .empty-hint{font-size:12.5px; color:var(--slate); font-style:italic; padding:10px 0;}
+
+  @media (max-width:880px){
+    #sidebar{position:fixed; z-index:40; transform:translateX(-100%); transition:transform .2s;}
+    #sidebar.open{transform:translateX(0);}
+    .grid-2, .grid-3, .provider-grid, .field-row{grid-template-columns:1fr;}
+    #content{padding:22px 18px 60px;}
+    #topbar{padding:16px 18px;}
+  }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, .card-btn:focus-visible{
+    outline:2px solid var(--brass); outline-offset:1px;
+  }
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+</style>
+</head>
+<body>
+
+<div id="shell">
+  <aside id="sidebar">
+    <div class="brand">
+      <div class="mark">Royal Square<br>Financial</div>
+      <div class="sub">Client &amp; Adviser Platform</div>
+      <div class="reg">FSP 29370 · Qiniso Ntuli, Director<br>4 Pritchard Street, Johannesburg</div>
+    </div>
+    <nav class="tabs" id="navTabs"></nav>
+    <div class="side-foot">
+      <div class="role-switch" id="roleSwitch">
+        <button data-role="adviser">Adviser</button>
+        <button data-role="client">Client</button>
+      </div>
+      <select class="client-select" id="clientSelect"></select>
+    </div>
+  </aside>
+
+  <div id="main">
+    <div id="topbar">
+      <div>
+        <div class="title" id="pageTitle">Dashboard</div>
+        <div class="meta" id="pageMeta"></div>
+      </div>
+      <div id="topbarRight"></div>
+    </div>
+    <div id="content"></div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   DATA
+   ========================================================= */
+const providers = [
+  {name:'Sanlam', status:'API connected', level:'api'},
+  {name:'Old Mutual', status:'API connected', level:'api'},
+  {name:'Discovery', status:'API connected', level:'api'},
+  {name:'Santam', status:'API connected', level:'api'},
+  {name:'Momentum', status:'File transfer (nightly)', level:'file'},
+  {name:'Liberty', status:'File transfer (nightly)', level:'file'},
+  {name:'Allan Gray', status:'Manual — integration planned', level:'manual'},
+  {name:'Hollard', status:'File transfer (nightly)', level:'file'},
+  {name:'PPS', status:'Manual — integration planned', level:'manual'},
+  {name:'Metropolitan', status:'Manual — integration planned', level:'manual'},
+  {name:'Guardrisk', status:'Manual — integration planned', level:'manual'},
+  {name:'Bidvest Insurance', status:'Manual — integration planned', level:'manual'},
+];
+
+const clients = [
+  {
+    id:'c1', name:'Thandiwe Nkosi', dob:'1985-04-11', idnum:'8504115XXXXXX', adviser:'Palesa Mokoena',
+    assets:[
+      {label:'Allan Gray — Balanced Unit Trust', value:842300, kind:'Investment'},
+      {label:'Old Mutual — Retirement Annuity', value:610150, kind:'Retirement'},
+      {label:'Sanlam — Endowment Policy', value:220000, kind:'Investment'},
+      {label:'Primary residence — Parkhurst', value:2450000, kind:'Property'},
+      {label:'Vehicle — Audi Q5 (2023)', value:310000, kind:'Vehicle'},
+    ],
+    liabilities:[
+      {label:'Home loan — Nedbank', value:1180000},
+      {label:'Vehicle finance — WesBank', value:145000},
+    ],
+    policies:[
+      {provider:'Sanlam', product:'Life Cover', type:'Life Insurance', premium:1250, status:'active', renews:'2027-03-01'},
+      {provider:'Discovery', product:'Classic Comprehensive', type:'Health Insurance', premium:4890, status:'active', renews:'2027-01-01'},
+      {provider:'Old Mutual', product:'Family Funeral Plan', type:'Funeral Insurance', premium:320, status:'active', renews:'2027-06-01'},
+      {provider:'Santam', product:'Home & Motor Bundle', type:'Personal Insurance', premium:2150, status:'active', renews:'2026-11-15'},
+      {provider:'Allan Gray', product:'Balanced Unit Trust', type:'Investment', premium:0, status:'active', renews:'—'},
+      {provider:'Old Mutual', product:'Retirement Annuity', type:'Retirement Fund', premium:0, status:'active', renews:'2026-10-01', feeReview:true},
+    ],
+    goals:[
+      {name:'Retirement at 60', owner:'Thandiwe', shared:false, target:8000000, current:2140000, due:'2045-04-11'},
+      {name:'Family home upgrade', owner:'Thandiwe & Sipho', shared:true, target:500000, current:212500, due:'2028-06-01'},
+      {name:'Emergency fund', owner:'Thandiwe', shared:false, target:150000, current:98000, due:'2026-12-31'},
+      {name:"Kids' education fund", owner:'Thandiwe & Sipho', shared:true, target:600000, current:145000, due:'2032-01-01'},
+    ],
+  },
+  {
+    id:'c2', name:'Marc van der Merwe', dob:'1978-09-02', idnum:'7809025XXXXXX', adviser:'Palesa Mokoena',
+    assets:[
+      {label:'Allan Gray — Equity Fund', value:1980000, kind:'Investment'},
+      {label:'Primary residence — Bryanston', value:4100000, kind:'Property'},
+      {label:'Momentum — Retirement Annuity', value:1350000, kind:'Retirement'},
+    ],
+    liabilities:[{label:'Home loan — Standard Bank', value:1600000}],
+    policies:[
+      {provider:'Momentum', product:'Multiply Life', type:'Life Insurance', premium:3200, status:'active', renews:'2027-02-01'},
+      {provider:'Discovery', product:'Comprehensive Series', type:'Health Insurance', premium:6100, status:'active', renews:'2027-01-01'},
+      {provider:'Santam', product:'Commercial Property', type:'Commercial Insurance', premium:8900, status:'active', renews:'2026-10-20'},
+    ],
+    goals:[
+      {name:'Business expansion capital', owner:'Marc', shared:false, target:2000000, current:860000, due:'2029-01-01'},
+    ],
+  },
+  {
+    id:'c3', name:'Naledi Dlamini', dob:'1990-12-19', idnum:'9012195XXXXXX', adviser:'Palesa Mokoena',
+    assets:[
+      {label:'Sanlam — Unit Trust', value:265000, kind:'Investment'},
+      {label:'Vehicle — VW Polo (2022)', value:230000, kind:'Vehicle'},
+    ],
+    liabilities:[{label:'Vehicle finance — MFC', value:110000}],
+    policies:[
+      {provider:'Old Mutual', product:'Funeral Plan', type:'Funeral Insurance', premium:180, status:'active', renews:'2027-04-01'},
+      {provider:'Santam', product:'Motor Insurance', type:'Personal Insurance', premium:980, status:'active', renews:'2026-09-30'},
+    ],
+    goals:[
+      {name:'Deposit — first home', owner:'Naledi', shared:false, target:350000, current:61000, due:'2029-06-01'},
+    ],
+  },
+];
+
+let reminderRules = [
+  {id:'r1', task:'Insurance valuation certificate', freq:'Every 2 years', recipients:'both', clientId:'c1', due:'2026-11-02'},
+  {id:'r2', task:"Driving licence expiry", freq:'Once — from record', recipients:'client', clientId:'c1', due:'2027-04-11'},
+  {id:'r3', task:'Annual financial review meeting', freq:'Every year', recipients:'adviser', clientId:'c1', due:'2026-10-14'},
+  {id:'r4', task:'Retirement fund fee renewal', freq:'Every year', recipients:'adviser', clientId:'c1', due:'2026-10-01'},
+  {id:'r5', task:'Birthday', freq:'Every year — automated', recipients:'adviser', clientId:'c1', due:'2027-04-11'},
+  {id:'r6', task:'Short-term policy renewal — Santam Home & Motor', freq:'Every year', recipients:'both', clientId:'c1', due:'2026-11-15'},
+  {id:'r7', task:'FICA / KYC re-verification', freq:'Every 5 years', recipients:'adviser', clientId:'c1', due:'2028-02-19'},
+  {id:'r8', task:'Passport expiry', freq:'Once — from record', recipients:'client', clientId:'c1', due:'2027-08-30'},
+  {id:'r9', task:'Wedding anniversary', freq:'Every year — automated', recipients:'adviser', clientId:'c1', due:'2026-09-21'},
+  {id:'r10', task:'Commercial property renewal', freq:'Every year', recipients:'both', clientId:'c2', due:'2026-10-20'},
+];
+
+let claims = [
+  {
+    id:'CLM-1042', clientId:'c1', insurer:'Santam', claimNo:'SNT-88213-2026', handler:'Andile Khumalo',
+    incidentDate:'2026-08-14', status:'in_progress', step:5,
+    vehicle:'Audi Q5 (2023) — HK 34 GP',
+    updates:[
+      {date:'2026-08-14', text:'Accident reported via app. Scene checklist completed by client.'},
+      {date:'2026-08-15', text:'Claim registered with Santam. Claim number and handler assigned.'},
+      {date:'2026-08-19', text:'Vehicle taken for assessment at Santam-approved assessor.'},
+      {date:'2026-08-21', text:'Assessment report received — sent to insurer and adviser.'},
+      {date:'2026-08-25', text:'Repair quote submitted to Santam for authorisation.'},
+      {date:'2026-08-29', text:'Santam authorised repairs. Awaiting client date for drop-off.'},
+    ],
+  },
+];
+
+let requests = [
+  {id:'RQ-3301', clientId:'c1', type:'Request an IRP5', provider:'Allan Gray', status:'complete', date:'2026-08-20'},
+  {id:'RQ-3298', clientId:'c1', type:'Change of address', provider:'—', status:'sent', date:'2026-08-11'},
+  {id:'RQ-3290', clientId:'c2', type:'Request a policy document', provider:'Momentum', status:'in_progress', date:'2026-08-04'},
+];
+
+const requestTypes = [
+  {key:'address', label:'Change of address', desc:'Update your residential address across all linked policies.'},
+  {key:'bank', label:'Change of bank details', desc:'Update the account your premiums are collected from.'},
+  {key:'policydoc', label:'Request a policy document', desc:'Get a copy of any active policy schedule or wording.'},
+  {key:'border', label:'Request a border letter', desc:'Travel authorisation letter for an insured vehicle.'},
+  {key:'irp5', label:'Request an IRP5', desc:'Tax certificate from an investment or retirement provider.'},
+  {key:'consult', label:'Request a consultation', desc:"Book time with your adviser."},
+  {key:'infocollect', label:'Client information collection', desc:'Submit or update your balance sheet and income statement.'},
+];
+
+const accidentChecklist = [
+  'Photos of the road surface and direction of travel',
+  'The address or nearest cross streets',
+  'Photos of all vehicles and people involved',
+  'Licence plates and registration discs',
+  'ID documents of everyone involved',
+  'Witness names and contact details, plus a voice note if possible',
+  'Insurance details of the other parties',
+];
+
+const pipelineSteps = [
+  'Insurer returns a claim number and a claims handler',
+  'Client takes the vehicle for assessment',
+  'Assessment goes to the insurer and to us',
+  'Repair quotes go to the insurer',
+  'Insurer authorises repairs',
+  'Client picks a date for the vehicle to go in',
+  'We arrange car hire and delivery to the repairer',
+  'Weekly repair updates pushed to us',
+  'We arrange collection and return of the hire car',
+  'Client writes a short review and closes the transaction',
+];
+
+/* =========================================================
+   STATE
+   ========================================================= */
+const state = {
+  role: 'adviser',
+  clientId: 'c1',
+  tab: 'dashboard',
+  activeClaimId: 'CLM-1042',
+};
+
+const tabsByRole = {
+  adviser: [
+    ['dashboard','Client dashboard', iconGrid()],
+    ['goals','Goals', iconTarget()],
+    ['reminders','Reminders', iconBell()],
+    ['claims','Claims', iconShield()],
+    ['requests','Requests', iconFile()],
+    ['integrations','Integrations', iconLink()],
+  ],
+  client: [
+    ['dashboard','My dashboard', iconGrid()],
+    ['goals','My goals', iconTarget()],
+    ['reminders','My reminders', iconBell()],
+    ['claims','Claims', iconShield()],
+    ['requests','Requests', iconFile()],
+  ],
+};
+
+function iconGrid(){return svg('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>');}
+function iconTarget(){return svg('<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.6" fill="currentColor"/>');}
+function iconBell(){return svg('<path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10Z"/><path d="M10 18a2 2 0 0 0 4 0"/>');}
+function iconShield(){return svg('<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3Z"/>');}
+function iconFile(){return svg('<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/>');}
+function iconLink(){return svg('<path d="M9 15l6-6"/><path d="M8 12l-2 2a3.5 3.5 0 0 0 5 5l2-2"/><path d="M16 12l2-2a3.5 3.5 0 0 0-5-5l-2 2"/>');}
+function svg(inner){return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;}
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+function fmtR(n){
+  return 'R ' + Math.round(n).toLocaleString('en-ZA');
+}
+function fmtDate(d){
+  if(d==='—') return d;
+  const dt = new Date(d+'T00:00:00');
+  return dt.toLocaleDateString('en-ZA', {day:'numeric', month:'short', year:'numeric'});
+}
+function daysUntil(d){
+  const dt = new Date(d+'T00:00:00');
+  const now = new Date('2026-09-05T00:00:00');
+  return Math.round((dt-now)/86400000);
+}
+function currentClient(){ return clients.find(c=>c.id===state.clientId); }
+function clientsForView(){ return state.role==='client' ? clients.filter(c=>c.id===state.clientId) : clients; }
+function netWorth(c){
+  const a = c.assets.reduce((s,x)=>s+x.value,0);
+  const l = c.liabilities.reduce((s,x)=>s+x.value,0);
+  return {a,l,net:a-l};
+}
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+function closeModal(){ document.getElementById('overlay').classList.remove('open'); document.getElementById('modal').innerHTML=''; }
+function openModal(html){ document.getElementById('modal').innerHTML = html; document.getElementById('overlay').classList.add('open'); }
+
+/* =========================================================
+   RENDER: SHELL
+   ========================================================= */
+function renderShell(){
+  document.getElementById('roleSwitch').querySelectorAll('button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.role===state.role);
+    b.onclick = ()=>{ state.role=b.dataset.role; if(state.role==='client'){} renderAll(); };
+  });
+
+  const sel = document.getElementById('clientSelect');
+  if(state.role==='adviser'){
+    sel.style.display='';
+    sel.innerHTML = clients.map(c=>`<option value="${c.id}" ${c.id===state.clientId?'selected':''}>${c.name}</option>`).join('');
+    sel.onchange = ()=>{ state.clientId = sel.value; renderAll(); };
+  } else {
+    sel.style.display='none';
+  }
+
+  const nav = document.getElementById('navTabs');
+  const tabs = tabsByRole[state.role];
+  if(!tabs.find(t=>t[0]===state.tab)) state.tab = 'dashboard';
+  nav.innerHTML = tabs.map(([key,label,icon])=>{
+    let count = '';
+    if(key==='reminders'){
+      const n = reminderRules.filter(r=> state.role==='adviser' ? true : r.clientId===state.clientId).filter(r=>daysUntil(r.due)<=30).length;
+      if(n>0) count = `<span class="tab-count">${n}</span>`;
+    }
+    if(key==='claims'){
+      const n = claims.filter(c=> state.role==='adviser' ? c.status==='in_progress' : (c.clientId===state.clientId && c.status==='in_progress')).length;
+      if(n>0) count = `<span class="tab-count">${n}</span>`;
+    }
+    return `<button data-tab="${key}" class="${key===state.tab?'active':''}">${icon}<span>${label}</span>${count}</button>`;
+  }).join('');
+  nav.querySelectorAll('button').forEach(b=>{
+    b.onclick = ()=>{ state.tab=b.dataset.tab; renderAll(); };
+  });
+}
+
+/* =========================================================
+   RENDER: DASHBOARD
+   ========================================================= */
+function renderDashboard(){
+  document.getElementById('pageTitle').textContent = state.role==='adviser' ? 'Client dashboard' : 'My dashboard';
+  const list = clientsForView();
+  document.getElementById('pageMeta').textContent = state.role==='adviser'
+    ? `${clients.length} clients on book · Adviser: ${currentClient().adviser}`
+    : `Adviser: ${currentClient().adviser}`;
+  document.getElementById('topbarRight').innerHTML = '';
+
+  let html = '';
+  list.forEach(c=>{
+    const nw = netWorth(c);
+    const dueSoon = reminderRules.filter(r=>r.clientId===c.id && daysUntil(r.due)<=45 && daysUntil(r.due)>=0).sort((a,b)=>daysUntil(a.due)-daysUntil(b.due));
+    const openClaims = claims.filter(cl=>cl.clientId===c.id && cl.status==='in_progress');
+
+    html += `<div class="panel">
+      <div class="stat-row">
+        <div>
+          <h2 style="font-size:20px;">${c.name}</h2>
+          <div class="label" style="margin-top:2px;">ID ${c.idnum} · DOB ${fmtDate(c.dob)}</div>
+        </div>
+        <div class="stat">
+          <div class="v">${fmtR(nw.net)}</div>
+          <div class="l">Net worth</div>
+        </div>
+      </div>
+      <hr class="hr">
+      <div class="grid grid-3">
+        <div class="stat"><div class="v" style="font-size:18px;">${fmtR(nw.a)}</div><div class="l">Total assets</div></div>
+        <div class="stat"><div class="v" style="font-size:18px; color:var(--wine);">${fmtR(nw.l)}</div><div class="l">Total liabilities</div></div>
+        <div class="stat"><div class="v" style="font-size:18px;">${c.policies.length}</div><div class="l">Active policies</div></div>
+      </div>
+
+      <hr class="hr">
+      <div class="grid grid-2">
+        <div>
+          <h3 style="font-size:14.5px; margin-bottom:8px;">Assets</h3>
+          <table>${c.assets.map(a=>`<tr><td>${a.label}<div class="label">${a.kind}</div></td><td class="num">${fmtR(a.value)}</td></tr>`).join('')}</table>
+          <h3 style="font-size:14.5px; margin:16px 0 8px;">Liabilities</h3>
+          <table>${c.liabilities.map(a=>`<tr><td>${a.label}</td><td class="num" style="color:var(--wine);">−${fmtR(a.value)}</td></tr>`).join('')}</table>
+        </div>
+        <div>
+          <h3 style="font-size:14.5px; margin-bottom:8px;">Policies on cover</h3>
+          <table>
+            ${c.policies.map(p=>`<tr>
+              <td>${p.product}<div class="label">${p.provider} · ${p.type}</div></td>
+              <td class="num">${p.premium>0?fmtR(p.premium)+'/mo':'—'}</td>
+            </tr>`).join('')}
+          </table>
+        </div>
+      </div>
+
+      ${(dueSoon.length || openClaims.length) ? `<hr class="hr"><div class="grid grid-2">
+        ${dueSoon.length ? `<div>
+          <h3 style="font-size:14.5px; margin-bottom:8px;">Coming up</h3>
+          ${dueSoon.slice(0,4).map(r=>`<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;">
+            <span>${r.task}</span><span class="label">${fmtDate(r.due)}</span></div>`).join('')}
+        </div>` : '<div></div>'}
+        ${openClaims.length ? `<div>
+          <h3 style="font-size:14.5px; margin-bottom:8px;">Open claims</h3>
+          ${openClaims.map(cl=>`<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;">
+            <span>${cl.insurer} — ${cl.vehicle.split(' — ')[0]}</span>
+            <span class="pill pending">Step ${cl.step} of 10</span></div>`).join('')}
+        </div>` : ''}
+      </div>` : ''}
+    </div>`;
+  });
+
+  document.getElementById('content').innerHTML = html;
+}
+
+/* =========================================================
+   RENDER: GOALS
+   ========================================================= */
+function renderGoals(){
+  document.getElementById('pageTitle').textContent = state.role==='adviser' ? 'Goals' : 'My goals';
+  document.getElementById('pageMeta').textContent = 'Individual and shared goals, tracked toward target.';
+  document.getElementById('topbarRight').innerHTML = state.role==='adviser'
+    ? `<button class="btn" id="addGoalBtn">+ Add goal</button>` : '';
+
+  const list = clientsForView();
+  let html = '';
+  list.forEach(c=>{
+    html += `<div class="panel">
+      <div class="stat-row" style="margin-bottom:4px;">
+        <h3 style="font-size:16px;">${state.role==='adviser'?c.name:'Your goals'}</h3>
+        <span class="label">${c.goals.length} goal${c.goals.length!==1?'s':''}</span>
+      </div>
+      ${c.goals.length ? c.goals.map(g=>{
+        const pct = Math.min(100, Math.round((g.current/g.target)*100));
+        return `<div class="goal">
+          <div class="goal-top">
+            <div><span class="goal-name">${g.name}</span><span class="goal-tag">${g.shared?'Shared':'Individual'} · ${g.owner}</span></div>
+            <div class="goal-amounts">${fmtR(g.current)} of ${fmtR(g.target)}</div>
+          </div>
+          <div class="bar-track"><div class="bar-fill" style="width:${pct}%;"></div></div>
+          <div class="goal-foot"><span>${pct}% funded</span><span>Target: ${fmtDate(g.due)}</span></div>
+        </div>`;
+      }).join('') : `<div class="empty-hint">No goals loaded yet for this client.</div>`}
+    </div>`;
+  });
+  document.getElementById('content').innerHTML = html;
+
+  if(state.role==='adviser'){
+    document.getElementById('addGoalBtn').onclick = ()=> openAddGoalModal();
+  }
+}
+
+function openAddGoalModal(){
+  const opts = clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  openModal(`
+    <div class="modal-head"><h3>Add a goal</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <form id="goalForm">
+        <div class="field"><label>Client</label><select name="client">${opts}</select></div>
+        <div class="field"><label>Goal name</label><input name="name" placeholder="e.g. Overseas trip fund" required></div>
+        <div class="field-row">
+          <div class="field"><label>Target amount (R)</label><input name="target" type="number" min="0" required></div>
+          <div class="field"><label>Current amount (R)</label><input name="current" type="number" min="0" value="0" required></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Target date</label><input name="due" type="date" required></div>
+          <div class="field"><label>Type</label><select name="shared"><option value="0">Individual</option><option value="1">Shared</option></select></div>
+        </div>
+        <div class="field"><label>Owner(s)</label><input name="owner" placeholder="e.g. Thandiwe & Sipho" required></div>
+      </form>
+    </div>
+    <div class="modal-foot">
+      <button class="btn secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn" onclick="submitGoal()">Save goal</button>
+    </div>
+  `);
+}
+function submitGoal(){
+  const f = document.getElementById('goalForm');
+  const d = Object.fromEntries(new FormData(f).entries());
+  if(!f.reportValidity()) return;
+  const c = clients.find(x=>x.id===d.client);
+  c.goals.push({name:d.name, owner:d.owner, shared:d.shared==='1', target:Number(d.target), current:Number(d.current), due:d.due});
+  closeModal();
+  toast('Goal added for '+c.name);
+  state.tab='goals'; renderAll();
+}
+
+/* =========================================================
+   RENDER: REMINDERS
+   ========================================================= */
+function renderReminders(){
+  document.getElementById('pageTitle').textContent = 'Reminders';
+  document.getElementById('pageMeta').textContent = 'Automated tasks, documents, renewals and reviews.';
+  document.getElementById('topbarRight').innerHTML = state.role==='adviser'
+    ? `<button class="btn" id="addReminderBtn">+ New reminder rule</button>` : '';
+
+  const rows = reminderRules
+    .filter(r=> state.role==='adviser' ? true : r.clientId===state.clientId)
+    .slice()
+    .sort((a,b)=> daysUntil(a.due)-daysUntil(b.due));
+
+  const recLabel = {adviser:'Us', client:'Client', both:'Us + Client'};
+  const recPill = {adviser:'pending', client:'active', both:'both'};
+
+  let html = `<div class="panel">
+    <table>
+      <thead><tr>
+        <th>Task</th>
+        ${state.role==='adviser'?'<th>Client</th>':''}
+        <th>Frequency</th>
+        <th>Sent to</th>
+        <th class="num">Due</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map(r=>{
+          const d = daysUntil(r.due);
+          const c = clients.find(x=>x.id===r.clientId);
+          const soon = d<=14;
+          return `<tr>
+            <td>${r.task}</td>
+            ${state.role==='adviser'?`<td>${c?c.name:''}</td>`:''}
+            <td class="label">${r.freq}</td>
+            <td><span class="pill ${recPill[r.recipients]}">${recLabel[r.recipients]}</span></td>
+            <td class="num" style="${soon?'color:var(--wine);font-weight:600;':''}">${fmtDate(r.due)}${soon?` <span class="label" style="color:var(--wine);">(${d}d)</span>`:''}</td>
+          </tr>`;
+        }).join('') || `<tr><td colspan="5" class="empty-hint">No reminders configured.</td></tr>`}
+      </tbody>
+    </table>
+  </div>
+  <div class="panel" style="margin-top:16px;">
+    <h3 style="font-size:15px; margin-bottom:8px;">How this works</h3>
+    <p class="label" style="font-size:12.5px; line-height:1.6;">
+      Every reminder is a rule: a trigger, a frequency, and who it's sent to — the adviser, the client, or both.
+      New rule types can be added at any time without changing the app; this list is meant to keep growing as compliance
+      and service requirements change.
+    </p>
+  </div>`;
+
+  document.getElementById('content').innerHTML = html;
+  if(state.role==='adviser'){
+    document.getElementById('addReminderBtn').onclick = openAddReminderModal;
+  }
+}
+
+function openAddReminderModal(){
+  const opts = clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  openModal(`
+    <div class="modal-head"><h3>New reminder rule</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <form id="remForm">
+        <div class="field"><label>Task / trigger</label><input name="task" placeholder="e.g. TFSA contribution limit check" required></div>
+        <div class="field-row">
+          <div class="field"><label>Client</label><select name="client">${opts}</select></div>
+          <div class="field"><label>Sent to</label>
+            <select name="recipients">
+              <option value="adviser">Us</option>
+              <option value="client">Client</option>
+              <option value="both">Us + Client</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Frequency</label><input name="freq" placeholder="e.g. Every year" required></div>
+          <div class="field"><label>Next due date</label><input name="due" type="date" required></div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-foot">
+      <button class="btn secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn" onclick="submitReminder()">Create rule</button>
+    </div>
+  `);
+}
+function submitReminder(){
+  const f = document.getElementById('remForm');
+  if(!f.reportValidity()) return;
+  const d = Object.fromEntries(new FormData(f).entries());
+  reminderRules.push({id:'r'+Date.now(), task:d.task, freq:d.freq, recipients:d.recipients, clientId:d.client, due:d.due});
+  closeModal();
+  toast('Reminder rule created');
+  renderAll();
+}
+
+/* =========================================================
+   RENDER: CLAIMS
+   ========================================================= */
+function renderClaims(){
+  document.getElementById('pageTitle').textContent = 'Claims';
+  document.getElementById('pageMeta').textContent = 'Short-term insurance claims, start to finish.';
+  document.getElementById('topbarRight').innerHTML = '';
+
+  const list = claims.filter(c=> state.role==='adviser' ? true : c.clientId===state.clientId);
+
+  let html = `<div class="panel">
+    <div class="grid grid-2">
+      <button class="card-btn" id="reportAccidentBtn">
+        <span class="t">Report an accident or loss</span>
+        <span class="d">Get the on-scene checklist immediately — this is what makes the claim go smoothly later.</span>
+      </button>
+      <button class="card-btn" id="registerClaimBtn">
+        <span class="t">Register a motor claim</span>
+        <span class="d">Choose your insurer and submit the incident details and documents.</span>
+      </button>
+    </div>
+  </div>`;
+
+  html += `<div class="panel"><h3 style="font-size:15px; margin-bottom:10px;">${list.length?'Claims in progress':'No claims yet'}</h3>`;
+  if(!list.length){
+    html += `<div class="empty-hint">Report an accident above to start one.</div>`;
+  } else {
+    list.forEach(cl=>{
+      const c = clients.find(x=>x.id===cl.clientId);
+      html += `<div style="border:1px solid var(--line); border-radius:3px; padding:16px 18px; margin-bottom:12px;">
+        <div class="stat-row" style="margin-bottom:10px;">
+          <div>
+            <div style="font-family:'Newsreader',serif; font-size:16.5px;">${cl.insurer} — ${cl.vehicle}</div>
+            <div class="label">${state.role==='adviser'?c.name+' · ':''}Claim ${cl.claimNo} · Handler: ${cl.handler}</div>
+          </div>
+          <span class="pill pending">Step ${cl.step} of 10</span>
+        </div>
+        <div class="pipeline">
+          ${pipelineSteps.map((s,i)=>{
+            const idx = i+1;
+            const cls = idx < cl.step ? 'done' : (idx===cl.step ? 'current':'');
+            const upd = cl.updates[i];
+            return `<div class="pstep ${cls}">
+              <div class="dot-col"><div class="dot"></div><div class="stem"></div></div>
+              <div class="body">
+                <div class="st">${s}</div>
+                ${upd ? `<div class="sd">${fmtDate(upd.date)} — ${upd.text}</div>` : (cls==='current' ? `<div class="sd">In progress</div>` : '')}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    });
+  }
+  html += `</div>`;
+
+  document.getElementById('content').innerHTML = html;
+  document.getElementById('reportAccidentBtn').onclick = openAccidentChecklistModal;
+  document.getElementById('registerClaimBtn').onclick = ()=> openRegisterClaimModal(1);
+}
+
+function openAccidentChecklistModal(){
+  openModal(`
+    <div class="modal-head"><h3>Report an accident or loss</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px; color:var(--slate); margin-top:0;">Gather this at the scene — it's what makes the claim go smoothly later.</p>
+      ${accidentChecklist.map((item,i)=>`<div class="check-item">
+        <input type="checkbox" id="chk${i}">
+        <label for="chk${i}">${item}</label>
+      </div>`).join('')}
+      <div class="hr"></div>
+      <div style="background:var(--wine-soft); color:var(--wine); border-radius:3px; padding:12px 14px; font-size:13px;">
+        Reminder: report to the police within 48 hours of the incident.
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn secondary" onclick="closeModal()">I'll finish this later</button>
+      <button class="btn" onclick="closeModal(); openRegisterClaimModal(1);">Continue to register the claim</button>
+    </div>
+  `);
+}
+
+function openRegisterClaimModal(step){
+  const insurerOpts = ['Santam','Old Mutual Insure','Discovery Insure','Hollard','Bidvest Insurance','Guardrisk','Auto & General','King Price','Outsurance','MiWay','Momentum','PPS Short-Term']
+    .map(n=>`<option>${n}</option>`).join('');
+  const clientOpts = clients.map(c=>`<option value="${c.id}" ${c.id===state.clientId?'selected':''}>${c.name}</option>`).join('');
+
+  const steps = [
+    // step 1
+    `<div class="field-row">
+      ${state.role==='adviser'?`<div class="field"><label>Client</label><select name="client">${clientOpts}</select></div>`:''}
+      <div class="field"><label>Insurer</label><select name="insurer">${insurerOpts}</select></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Date of incident</label><input name="date" type="date" required></div>
+      <div class="field"><label>Time of incident</label><input name="time" type="time" required></div>
+    </div>
+    <div class="field"><label>Description of the incident</label><textarea name="desc" required></textarea></div>`,
+    // step 2
+    `<div class="field-row">
+      <div class="field"><label>Police notified?</label><select name="police"><option value="yes">Yes</option><option value="no">No</option></select></div>
+      <div class="field"><label>Case number</label><input name="caseno" placeholder="If applicable"></div>
+    </div>
+    <div class="field"><label>Witness details</label><textarea name="witness" placeholder="Name, contact, and whether a statement was taken"></textarea></div>
+    <div class="field-row">
+      <div class="field"><label>Who was driving</label><input name="driver" required></div>
+      <div class="field"><label>Vehicle use</label><select name="use"><option>Personal</option><option>Business</option></select></div>
+    </div>`,
+    // step 3
+    `<div class="field"><label>Other vehicles / property involved</label><textarea name="other"></textarea></div>
+    <div class="field-row">
+      <div class="field"><label>Third party licence &amp; vehicle reg.</label><input name="tpreg"></div>
+      <div class="field"><label>Third party insurer &amp; policy no.</label><input name="tpins"></div>
+    </div>`,
+    // step 4 - uploads
+    `<div class="field"><label>Photos — vehicles, damage, road surface, discs, licences</label><input type="file" multiple></div>
+    <div class="field"><label>Driver's licence</label><input type="file"></div>
+    <div class="field"><label>Sketch of the accident</label><input type="file"></div>
+    <p class="label">Files upload directly to secure cloud storage and are attached to this claim.</p>`,
+  ];
+
+  openModal(`
+    <div class="modal-head"><h3>Register a motor claim</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <div class="step-wizard-nav">${[1,2,3,4].map(i=>`<div class="swn-item ${i<=step?'active':''}"></div>`).join('')}</div>
+      <div class="label" style="margin-bottom:14px;">Step ${step} of 4</div>
+      <form id="claimForm">${steps[step-1]}</form>
+    </div>
+    <div class="modal-foot">
+      ${step>1?`<button class="btn secondary" onclick="openRegisterClaimModal(${step-1})">Back</button>`:`<button class="btn secondary" onclick="closeModal()">Cancel</button>`}
+      ${step<4?`<button class="btn" onclick="openRegisterClaimModal(${step+1})">Next</button>`:`<button class="btn" onclick="submitClaim()">Submit claim</button>`}
+    </div>
+  `);
+}
+
+function submitClaim(){
+  const cid = state.role==='adviser' ? state.clientId : state.clientId;
+  const c = clients.find(x=>x.id===cid);
+  const id = 'CLM-'+(1000+claims.length+43);
+  claims.push({
+    id, clientId: cid, insurer:'Santam', claimNo:'Pending', handler:'Awaiting assignment',
+    incidentDate:'2026-09-05', status:'in_progress', step:1,
+    vehicle: c.assets.find(a=>a.kind==='Vehicle')?.label.split(' — ')[0] || 'Vehicle',
+    updates:[{date:'2026-09-05', text:'Claim submitted via app. Awaiting insurer claim number.'}],
+  });
+  closeModal();
+  toast('Claim submitted — tracking it for you now');
+  state.tab='claims'; renderAll();
+}
+
+/* =========================================================
+   RENDER: REQUESTS
+   ========================================================= */
+function renderRequests(){
+  document.getElementById('pageTitle').textContent = 'Requests';
+  document.getElementById('pageMeta').textContent = 'Everything else that used to be a form.';
+  document.getElementById('topbarRight').innerHTML = '';
+
+  let html = `<div class="panel">
+    <h3 style="font-size:15px; margin-bottom:12px;">Start a request</h3>
+    <div class="grid grid-3">
+      ${requestTypes.map(rt=>`<button class="card-btn" data-key="${rt.key}" data-label="${rt.label}">
+        <span class="t">${rt.label}</span>
+        <span class="d">${rt.desc}</span>
+      </button>`).join('')}
+    </div>
+  </div>`;
+
+  const list = requests.filter(r=> state.role==='adviser' ? true : r.clientId===state.clientId);
+  const statusPill = {complete:'active', sent:'both', in_progress:'pending'};
+  const statusLabel = {complete:'Complete', sent:'Sent to provider', in_progress:'In progress'};
+  html += `<div class="panel" style="margin-top:16px;">
+    <h3 style="font-size:15px; margin-bottom:10px;">Recent requests</h3>
+    <table>
+      <thead><tr><th>Type</th>${state.role==='adviser'?'<th>Client</th>':''}<th>Provider</th><th>Date</th><th>Status</th></tr></thead>
+      <tbody>
+        ${list.slice().reverse().map(r=>{
+          const c = clients.find(x=>x.id===r.clientId);
+          return `<tr>
+            <td>${r.type}</td>
+            ${state.role==='adviser'?`<td>${c.name}</td>`:''}
+            <td class="label">${r.provider}</td>
+            <td class="label">${fmtDate(r.date)}</td>
+            <td><span class="pill ${statusPill[r.status]}">${statusLabel[r.status]}</span></td>
+          </tr>`;
+        }).join('') || `<tr><td colspan="5" class="empty-hint">No requests yet.</td></tr>`}
+      </tbody>
+    </table>
+  </div>`;
+
+  document.getElementById('content').innerHTML = html;
+  document.querySelectorAll('[data-key]').forEach(btn=>{
+    btn.onclick = ()=> openRequestModal(btn.dataset.key, btn.dataset.label);
+  });
+}
+
+function openRequestModal(key, label){
+  const clientOpts = clients.map(c=>`<option value="${c.id}" ${c.id===state.clientId?'selected':''}>${c.name}</option>`).join('');
+  let fields = '';
+  if(key==='address'){
+    fields = `<div class="field"><label>New residential address</label><textarea name="detail" required></textarea></div>
+    <div class="field"><label>Effective date</label><input name="date2" type="date"></div>`;
+  } else if(key==='bank'){
+    fields = `<div class="field-row">
+      <div class="field"><label>Bank</label><input name="bank" required></div>
+      <div class="field"><label>Account number</label><input name="acc" required></div>
+    </div>
+    <div class="field"><label>Which policies should this apply to?</label><input name="detail" placeholder="e.g. All / specific policy"></div>`;
+  } else if(key==='policydoc' || key==='irp5' || key==='border'){
+    fields = `<div class="field"><label>Provider</label><input name="provider" required placeholder="e.g. Sanlam"></div>
+    <div class="field"><label>Notes</label><textarea name="detail" placeholder="Policy number, tax year, or travel dates if relevant"></textarea></div>`;
+  } else if(key==='consult'){
+    fields = `<div class="field-row">
+      <div class="field"><label>Preferred date</label><input name="date2" type="date" required></div>
+      <div class="field"><label>Preferred time</label><input name="time2" type="time"></div>
+    </div>
+    <div class="field"><label>What would you like to discuss?</label><textarea name="detail"></textarea></div>`;
+  } else if(key==='infocollect'){
+    fields = `<div class="field"><label>Upload balance sheet</label><input type="file"></div>
+    <div class="field"><label>Upload income statement</label><input type="file"></div>
+    <div class="field"><label>Notes for your adviser</label><textarea name="detail"></textarea></div>`;
+  }
+
+  openModal(`
+    <div class="modal-head"><h3>${label}</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-body">
+      <form id="reqForm">
+        ${state.role==='adviser'?`<div class="field"><label>Client</label><select name="client">${clientOpts}</select></div>`:''}
+        ${fields}
+      </form>
+    </div>
+    <div class="modal-foot">
+      <button class="btn secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn" onclick="submitRequest('${key}','${label}')">Submit request</button>
+    </div>
+  `);
+}
+function submitRequest(key,label){
+  const f = document.getElementById('reqForm');
+  if(!f.reportValidity()) return;
+  const d = Object.fromEntries(new FormData(f).entries());
+  requests.push({
+    id:'RQ-'+Math.floor(3300+Math.random()*90),
+    clientId: d.client || state.clientId,
+    type: label,
+    provider: d.provider || d.bank || '—',
+    status: 'in_progress',
+    date: '2026-09-05',
+  });
+  closeModal();
+  toast('Request sent — we\u2019ll route it straight to the provider where possible');
+  state.tab='requests'; renderAll();
+}
+
+/* =========================================================
+   RENDER: INTEGRATIONS
+   ========================================================= */
+function renderIntegrations(){
+  document.getElementById('pageTitle').textContent = 'Integrations';
+  document.getElementById('pageMeta').textContent = 'The more that passes straight through automatically, the more useful the app becomes.';
+  document.getElementById('topbarRight').innerHTML = '';
+
+  const dotColor = {api:'var(--sage)', file:'var(--brass)', manual:'var(--slate)'};
+  const html = `<div class="panel">
+    <div class="provider-grid">
+      ${providers.map(p=>`<div class="provider">
+        <div class="pname">${p.name}</div>
+        <div class="pstatus"><span class="badge-dot" style="background:${dotColor[p.level]}"></span>${p.status}</div>
+      </div>`).join('')}
+    </div>
+  </div>
+  <div class="panel" style="margin-top:16px;">
+    <h3 style="font-size:15px; margin-bottom:6px;">Legend</h3>
+    <div style="display:flex; gap:22px; flex-wrap:wrap; font-size:12.5px;">
+      <div><span class="badge-dot" style="background:var(--sage)"></span>API connected — real-time, straight-through</div>
+      <div><span class="badge-dot" style="background:var(--brass)"></span>File transfer — batched, automated</div>
+      <div><span class="badge-dot" style="background:var(--slate)"></span>Manual — staff-handled today</div>
+    </div>
+  </div>`;
+  document.getElementById('content').innerHTML = html;
+}
+
+/* =========================================================
+   MASTER RENDER
+   ========================================================= */
+function renderAll(){
+  renderShell();
+  const map = {dashboard:renderDashboard, goals:renderGoals, reminders:renderReminders, claims:renderClaims, requests:renderRequests, integrations:renderIntegrations};
+  (map[state.tab]||renderDashboard)();
+}
+renderAll();
+</script>
+</body>
+</html>

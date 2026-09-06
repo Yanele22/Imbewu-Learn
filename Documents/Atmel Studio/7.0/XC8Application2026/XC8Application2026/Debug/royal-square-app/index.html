@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Royal Square Financial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-top:#DCEEF6;
+    --sky-bottom:#F6F4EF;
+    --soil-top:#4A3728;
+    --soil-bottom:#2B1F17;
+    --trunk:#4A3728;
+    --trunk-dark:#33261B;
+    --leaf:#7C9473;
+    --leaf-dark:#5E7A57;
+    --brass:#B8935A;
+    --ink:#0F1B31;
+    --paper:#F6F4EF;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Helvetica Neue',Arial,sans-serif;background:var(--paper);overflow-x:hidden;}
+  .scene{
+    position:relative;
+    height:100vh;
+    min-height:720px;
+    perspective:1400px;
+    overflow:hidden;
+  }
+  html, body{ overflow-x:hidden; }
+  .sky{
+    position:absolute; inset:0 0 42% 0;
+    background:linear-gradient(to bottom, var(--sky-top), var(--sky-bottom));
+  }
+  .soil{
+    position:absolute; left:0; right:0; bottom:0; height:42%;
+    background:linear-gradient(to bottom, var(--soil-top), var(--soil-bottom));
+  }
+  .horizon{
+    position:absolute; left:0; right:0; top:58%; height:3px;
+    background:rgba(0,0,0,0.08);
+  }
+  .brand{
+    position:absolute; top:28px; left:50%; transform:translateX(-50%);
+    text-align:center; z-index:20; color:var(--ink);
+  }
+  .brand .name{ font-family:Georgia, 'Times New Roman', serif; font-size:26px; letter-spacing:0.5px; }
+  .brand .tag{ font-size:12px; color:#7A8496; margin-top:2px; }
+
+  .tree-wrap{
+    position:absolute; left:50%; top:0; bottom:0; width:100%;
+    transform-style:preserve-3d;
+    transition:transform 200ms ease-out;
+  }
+  .tree{
+    position:absolute; left:50%; top:0; bottom:0; transform:translateX(-50%) scale(1.3);
+    width:900px; max-width:96vw; height:100%;
+  }
+  svg{ width:100%; height:100%; display:block; }
+
+  .branch, .root{
+    cursor:pointer;
+    transition:filter 150ms ease, transform 150ms ease;
+    transform-origin:center;
+  }
+  .branch:hover, .root:hover{
+    filter:brightness(1.18);
+  }
+  .branch-label, .root-label{
+    font-size:14px;
+    fill:var(--ink);
+    opacity:0;
+    transition:opacity 150ms ease;
+    pointer-events:none;
+    font-family:'Helvetica Neue',Arial,sans-serif;
+  }
+  .root-label{ fill:var(--paper); }
+  .branch-group:hover .branch-label,
+  .root-group:hover .root-label{ opacity:1; }
+
+  .gate{
+    position:absolute; left:50%; transform:translateX(-50%);
+    top:63%;
+    z-index:15;
+    text-align:center;
+  }
+  .gate .lead{ font-size:13px; color:#6B5A46; margin-bottom:10px; letter-spacing:0.3px;}
+  .gate-buttons{ display:flex; gap:12px; justify-content:center; }
+  .btn{
+    font-size:14px; padding:10px 22px; border-radius:2px; border:1px solid var(--ink);
+    background:transparent; color:var(--ink); cursor:pointer; transition:all 150ms ease;
+    font-family:inherit;
+  }
+  .btn.primary{ background:var(--ink); color:var(--paper); }
+  .btn:hover{ transform:translateY(-1px); }
+
+  /* ---- Modal ---- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(15,27,49,0.55);
+    display:none; align-items:center; justify-content:center; z-index:100;
+  }
+  .overlay.show{ display:flex; }
+  .modal{
+    background:var(--paper); width:380px; max-width:90vw; padding:32px;
+    border-radius:2px; box-shadow:0 20px 60px rgba(0,0,0,0.25);
+  }
+  .modal h2{ font-family:Georgia, serif; font-weight:normal; font-size:20px; margin:0 0 4px; color:var(--ink); }
+  .modal p.sub{ font-size:13px; color:#8A8574; margin:0 0 22px; }
+  .role-choice{ display:flex; gap:10px; margin-bottom:20px; }
+  .role-card{
+    flex:1; border:1px solid #DCD6C6; padding:16px 10px; text-align:center;
+    cursor:pointer; border-radius:2px; transition:all 150ms ease;
+  }
+  .role-card.active{ border-color:var(--brass); background:#FBF6EC; }
+  .role-card .rc-title{ font-size:14px; color:var(--ink); margin-bottom:2px; }
+  .role-card .rc-sub{ font-size:11px; color:#9A9382; }
+  .field{ margin-bottom:12px; }
+  .field label{ display:block; font-size:12px; color:#8A8574; margin-bottom:4px; }
+  .field input{
+    width:100%; padding:9px 10px; border:1px solid #DCD6C6; border-radius:2px;
+    font-size:14px; font-family:inherit; background:#fff;
+  }
+  .modal .btn.primary{ width:100%; margin-top:8px; padding:11px; }
+  .close-x{
+    position:absolute; top:14px; right:16px; background:none; border:none;
+    font-size:16px; color:#9A9382; cursor:pointer;
+  }
+  .modal{ position:relative; }
+  .switch-line{ text-align:center; font-size:12px; color:#9A9382; margin-top:14px; }
+  .switch-line a{ color:var(--ink); cursor:pointer; text-decoration:underline; }
+
+  /* ---- Dashboard shell ---- */
+  #dashboardRoot{ display:none; }
+  #dashboardRoot.show{ display:block; }
+  .top-bar{
+    background:var(--ink); color:var(--paper); padding:14px 28px;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .top-bar .name{ font-family:Georgia, serif; font-size:17px; }
+  .top-bar .who{ font-size:12px; color:#9AA6BD; }
+  .top-bar button{
+    background:none; border:1px solid #3A4A6B; color:#CBD3E1; padding:6px 14px;
+    border-radius:2px; cursor:pointer; font-size:12px;
+  }
+  .dash-body{ padding:32px; max-width:960px; margin:0 auto; }
+  .cards{ display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:20px; }
+  .card{ background:#fff; border:1px solid #E4E0D5; padding:20px; border-radius:2px; }
+  .card h3{ margin:0 0 6px; font-size:13px; text-transform:uppercase; letter-spacing:0.3px; color:#9A9382; font-weight:normal; }
+  .card .big{ font-family:Georgia, serif; font-size:28px; color:#22283A; }
+  .card ul{ margin:8px 0 0; padding-left:0; list-style:none; }
+  .card li{ font-size:14px; color:#4A4536; padding:6px 0; border-top:1px solid #EFECE3; display:flex; justify-content:space-between; }
+  .card li:first-child{ border-top:none; }
+
+  .dash-greet{ font-family:Georgia, serif; font-weight:normal; color:#22283A; margin-bottom:18px; }
+  .cd-panel{ display:none; }
+  .nav-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  .nav-tile{ background:#fff; border:1px solid #E4E0D5; padding:24px 10px; text-align:center; border-radius:2px; cursor:pointer; transition:all 150ms ease; }
+  .nav-tile:hover{ border-color:var(--brass); transform:translateY(-2px); }
+  .nav-tile.help{ background:#FBF1EC; border-color:#E3B79B; }
+  .nt-icon{ font-size:26px; margin-bottom:8px; }
+  .nt-label{ font-size:13px; color:#22283A; }
+  .back-link{ display:inline-block; font-size:13px; color:#7A7361; cursor:pointer; margin-bottom:14px; text-decoration:underline; }
+  .step-lead{ font-size:14px; color:#6B6552; max-width:420px; margin-bottom:20px; }
+  .safety-choice{ display:flex; gap:12px; }
+  .incident-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; max-width:640px; margin-top:10px; }
+  .incident-tile{ background:#fff; border:1px solid #E4E0D5; padding:18px 10px; text-align:center; border-radius:2px; cursor:pointer; font-size:13px; color:#22283A; transition:all 150ms ease; }
+  .incident-tile:hover{ border-color:var(--brass); }
+  .capture-list{ display:flex; flex-direction:column; gap:8px; max-width:420px; }
+  .capture-item{ background:#fff; border:1px solid #DCD6C6; padding:12px 14px; border-radius:2px; cursor:pointer; font-size:14px; color:#22283A; transition:all 150ms ease; }
+  .capture-item.done{ border-color:#3F6E52; background:#EEF4EF; }
+  .capture-item.done::after{ content:' ✓'; color:#3F6E52; font-weight:bold; }
+  .progress-bar-mini{ width:100%; max-width:420px; height:6px; background:#E9E5D8; border-radius:3px; overflow:hidden; }
+  .progress-fill{ height:100%; width:0%; background:var(--brass); transition:width 500ms ease; }
+  .claim-summary{ display:flex; flex-direction:column; gap:2px; max-width:420px; }
+  .claim-summary div{ display:flex; justify-content:space-between; font-size:14px; padding:8px 0; border-bottom:1px solid #EFECE3; color:#4A4536; }
+  .ref-badge{ background:#fff; border:1px solid #E4E0D5; padding:24px; max-width:300px; border-radius:2px; text-align:center; }
+  .ref-num{ font-family:Georgia, serif; font-size:24px; color:#22283A; }
+  .ref-status{ font-size:13px; color:#9A9382; margin-top:6px; }
+  #comingSoonNote{ max-width:480px; }
+
+  /* ---- RoyalOne entry experience ---- */
+  .scene{ min-height:100vh; height:auto; background:#f5f7f4 url("https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1800&q=85") center/cover fixed; color:#16261f; overflow:auto; perspective:none; position:relative; }
+  .scene:before{ content:""; position:absolute; inset:0; background:rgba(247,250,246,.84); pointer-events:none; }
+  .scene > *{ position:relative; z-index:1; }
+  .scene .sky,.scene .soil,.scene .horizon,.tree-wrap{ display:none; }
+  .brand{ position:static; transform:none; text-align:left; color:#16261f; }
+  .brand .name{ font-family:Georgia,serif; font-size:20px; letter-spacing:0; }
+  .brand .tag{ color:#91a098; font-size:10px; letter-spacing:1.4px; text-transform:uppercase; margin-top:4px; }
+  .logo-lockup{ display:flex; align-items:center; gap:10px; }
+  .logo-mark{ width:35px; height:35px; flex:0 0 auto; }
+  .logo-wordmark{ line-height:1; }
+  .logo-wordmark .name{ font-family:Arial,sans-serif; font-size:15px; letter-spacing:4px; color:#111820; }
+  .logo-wordmark .name span{ letter-spacing:4px; }
+  .logo-wordmark .tag{ color:#9f302d; font-family:Arial,sans-serif; font-size:9px; letter-spacing:4px; font-weight:bold; margin-top:6px; }
+  .landing-nav{ max-width:1180px; margin:0 auto; padding:24px 40px; display:flex; align-items:center; justify-content:space-between; }
+  .nav-meta{ display:flex; align-items:center; gap:22px; font-size:12px; color:#66766e; }
+  .secure-mark{ display:flex; align-items:center; gap:7px; color:#47735d; }
+  .secure-dot{ width:7px; height:7px; border-radius:50%; background:#5d9d76; box-shadow:0 0 0 4px #dceee2; }
+  .nav-login{ border:0; background:transparent; color:#16261f; font:inherit; cursor:pointer; padding:8px 0; border-bottom:1px solid #9bb0a4; }
+  .landing-main{ max-width:1180px; margin:0 auto; padding:50px 40px 70px; }
+  .eyebrow{ color:#5d8d6f; font-size:11px; letter-spacing:2px; text-transform:uppercase; font-weight:bold; margin-bottom:18px; }
+  .hero-grid{ display:grid; grid-template-columns:minmax(0,1.05fr) minmax(360px,.95fr); gap:70px; align-items:end; }
+  .hero-title{ font-family:Georgia,serif; font-weight:normal; font-size:clamp(44px,6vw,76px); line-height:1.02; letter-spacing:-1.5px; margin:0; color:#16261f; max-width:650px; }
+  .hero-title em{ color:#668f6f; font-style:normal; }
+  .hero-copy{ max-width:440px; color:#65766d; line-height:1.7; font-size:15px; margin:24px 0 0; }
+  .hero-actions{ margin-top:30px; display:flex; gap:12px; align-items:center; }
+  .scene .btn{ border-color:#b8c8bd; color:#385443; padding:12px 18px; border-radius:0; }
+  .scene .btn.primary{ background:#1b3528; color:#f6faf5; border-color:#1b3528; }
+  .hero-visual{ min-height:315px; background:#dfece3; position:relative; overflow:hidden; padding:28px; display:flex; align-items:flex-end; }
+  .hero-visual:before,.hero-visual:after{ content:""; position:absolute; border:1px solid rgba(72,116,83,.26); border-radius:50%; width:350px; height:350px; right:-90px; top:-100px; }
+  .hero-visual:after{ width:235px; height:235px; right:-32px; top:-42px; }
+  .visual-note{ position:relative; z-index:1; width:100%; background:rgba(250,252,249,.88); padding:18px; border-left:3px solid #679471; }
+  .visual-note strong{ display:block; font-family:Georgia,serif; font-size:22px; font-weight:normal; color:#1b3528; margin-bottom:6px; }
+  .visual-note span{ color:#66766e; font-size:12px; }
+  .platform-strip{ border-top:1px solid #d8e1da; margin-top:72px; padding-top:24px; display:flex; justify-content:space-between; gap:20px; color:#718078; font-size:12px; }
+  .platform-strip strong{ color:#1b3528; font-weight:normal; }
+  .relationship-line{ margin-top:24px; padding:22px 0; border-bottom:1px solid #d8e1da; color:#47735d; font-size:13px; letter-spacing:.2px; }
+  .service-cubes{ margin-top:24px; display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  .service-cube{ min-height:150px; position:relative; overflow:hidden; display:flex; align-items:flex-end; padding:16px; background-size:cover; background-position:center; color:#fff; }
+  .service-cube:after{ content:""; position:absolute; inset:0; background:linear-gradient(0deg,rgba(13,28,21,.8),rgba(13,28,21,.05) 75%); }
+  .service-cube strong{ position:relative; z-index:1; font:normal 21px Georgia,serif; }
+  .planning-cube{ background-image:url("https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=700&q=80"); }
+  .protection-cube{ background-image:url("https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&w=700&q=80"); }
+  .wealth-cube{ background-image:url("https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=700&q=80"); }
+  .advice-cube{ background-image:url("https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=700&q=80"); }
+  @media (max-width:720px){
+    .landing-nav{ padding:20px; }
+    .nav-meta{ gap:12px; }
+    .secure-mark{ display:none; }
+    .landing-main{ padding:40px 20px 50px; }
+    .hero-grid{ display:block; }
+    .hero-title{ font-size:49px; }
+    .hero-visual{ margin-top:42px; min-height:245px; }
+    .platform-strip{ margin-top:45px; display:block; line-height:1.7; }
+    .service-cubes{ grid-template-columns:1fr 1fr; }
+    .top-bar{ padding:14px 18px; }
+    .dash-body{ padding:24px 18px 40px; }
+    .cards{ grid-template-columns:1fr; }
+    .nav-grid{ grid-template-columns:1fr 1fr; gap:10px; }
+    .nav-tile{ padding:18px 8px; }
+  }
+  .onboarding-root{ display:none; min-height:100vh; background:#f5f7f4; color:#16261f; }
+  .onboarding-root.show{ display:block; }
+  .onboarding-shell{ max-width:960px; margin:0 auto; padding:34px 32px 60px; }
+  .onboarding-header{ display:flex; justify-content:space-between; align-items:start; margin-bottom:42px; }
+  .onboarding-header h1{ font:normal 34px Georgia,serif; margin:4px 0 8px; color:#16261f; }
+  .onboarding-header p{ color:#718078; font-size:14px; margin:0; }
+  .onboarding-form{ background:#fff; border:1px solid #dfe7e0; padding:28px; max-width:760px; }
+  .form-section{ border:0; padding:0; margin:0 0 28px; }
+  .form-section legend{ color:#1b3528; font:normal 21px Georgia,serif; margin-bottom:16px; }
+  .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .form-grid .field{ margin:0; }
+  .onboarding-form input,.onboarding-form select{ border:1px solid #cbd8cf; padding:12px; border-radius:0; width:100%; font:14px inherit; color:#263b2e; background:#fbfcfb; }
+  .service-options{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .service-option{ display:flex; gap:10px; align-items:center; border:1px solid #dbe5dd; padding:12px; color:#41564a; font-size:13px; cursor:pointer; }
+  .service-option:has(input:checked){ border-color:#6c9b77; background:#f0f7f1; color:#1b3528; }
+  .service-option input{ width:auto; accent-color:#47735d; }
+  .form-note{ color:#88968e; font-size:12px; line-height:1.5; margin:0 0 20px; }
+  .form-success{ display:none; border-left:3px solid #6c9b77; background:#f0f7f1; padding:18px; color:#335440; font-size:14px; }
+  .form-success.show{ display:block; }
+  .staff-intro{ color:#718078; font-size:14px; max-width:520px; line-height:1.6; }
+  .staff-name-form{ display:flex; gap:10px; align-items:end; max-width:560px; margin:24px 0 8px; }
+  .staff-name-form .field{ flex:1; margin:0; }
+  .staff-name-form input{ width:100%; padding:11px; border:1px solid #cbd8cf; font:14px inherit; }
+  .staff-identity{ color:#47735d; font-size:13px; margin:10px 0 24px; }
+  #dashboardRoot.client-mode{ display:grid; grid-template-columns:236px minmax(0,1fr); background:#eef1ec; min-height:100vh; }
+  #dashboardRoot.client-mode .top-bar{ grid-column:2; background:#f8f9f6; color:#182b21; border-bottom:1px solid rgba(24,43,33,.14); padding:20px 36px; }
+  #dashboardRoot.client-mode .top-bar .name{ font-family:'Newsreader',Georgia,serif; font-size:24px; }
+  #dashboardRoot.client-mode .top-bar .who{ color:#5b6b62; }
+  #dashboardRoot.client-mode .top-bar button{ color:#182b21; border-color:rgba(24,43,33,.28); }
+  .client-sidebar{ display:none; grid-column:1; grid-row:1 / span 2; background:#182b21; color:#f8f9f6; padding:28px 10px 18px; flex-direction:column; }
+  #dashboardRoot.client-mode .client-sidebar{ display:flex; }
+  .client-sidebar-brand{ padding:0 12px 22px; border-bottom:1px solid rgba(255,255,255,.13); margin-bottom:14px; font-family:'Newsreader',Georgia,serif; font-size:20px; line-height:1.1; }
+  .client-sidebar-brand small{ display:block; color:#d8be8c; font:11px 'IBM Plex Sans',sans-serif; margin-top:7px; }
+  .client-sidebar nav{ display:flex; flex-direction:column; gap:2px; }
+  .client-sidebar button{ border:0; background:transparent; color:rgba(255,255,255,.7); text-align:left; padding:11px 12px; font:13px 'IBM Plex Sans',sans-serif; cursor:pointer; border-radius:2px; }
+  .client-sidebar button:hover{ background:rgba(255,255,255,.07); color:#fff; }
+  .client-sidebar .sidebar-status{ margin-top:auto; padding:16px 12px 0; color:rgba(255,255,255,.48); font:11px/1.5 'IBM Plex Sans',sans-serif; }
+  .client-workspace-note{ color:#5b6b62; font:13px 'IBM Plex Sans',sans-serif; margin:8px 0 0; }
+  #dashboardRoot.client-mode #customerDash{ grid-column:2; padding:30px 36px 60px; max-width:1180px; width:100%; margin:0; }
+  #dashboardRoot.client-mode .dash-greet{ font-family:'Newsreader',Georgia,serif; font-size:28px; color:#182b21; }
+  #dashboardRoot.client-mode .client-workspace-note{ font-family:'IBM Plex Sans',sans-serif; }
+  #dashboardRoot.client-mode .nav-grid{ grid-template-columns:repeat(4,1fr); gap:16px; margin-top:24px; }
+  #dashboardRoot.client-mode .nav-tile{ background:#f8f9f6; border:1px solid rgba(24,43,33,.14); border-radius:3px; padding:22px 16px; text-align:left; }
+  #dashboardRoot.client-mode .nav-tile:hover{ border-color:#a6793d; transform:none; }
+  #dashboardRoot.client-mode .nt-icon{ font-size:21px; margin-bottom:18px; }
+  #dashboardRoot.client-mode .nt-label{ color:#182b21; font-family:'Newsreader',Georgia,serif; font-size:17px; }
+  #dashboardRoot.client-mode .card{ background:#f8f9f6; border:1px solid rgba(24,43,33,.14); border-radius:3px; padding:22px 24px; }
+  #dashboardRoot.client-mode .card h3{ color:#5b6b62; letter-spacing:0; text-transform:none; font-size:12px; }
+  #dashboardRoot.client-mode .card .big{ font-family:'IBM Plex Mono',monospace; color:#182b21; font-size:28px; }
+  #dashboardRoot.client-mode .client-data-panel{ background:#f8f9f6; border:1px solid rgba(24,43,33,.14); border-radius:3px; padding:22px 24px; margin-top:18px; }
+  #dashboardRoot.client-mode .client-data-panel h3{ color:#182b21; font:500 18px 'Newsreader',Georgia,serif; margin:0 0 14px; }
+  #dashboardRoot.client-mode .data-row{ display:flex; justify-content:space-between; gap:18px; padding:11px 0; border-bottom:1px solid rgba(24,43,33,.14); font-size:13px; }
+  #dashboardRoot.client-mode .data-row:last-child{ border-bottom:0; }
+  #dashboardRoot.client-mode .data-muted{ color:#5b6b62; font-size:12px; }
+  #dashboardRoot.client-mode .client-bar{ height:7px; background:#e2e6de; border-radius:20px; overflow:hidden; margin-top:8px; }
+  #dashboardRoot.client-mode .client-bar-fill{ height:100%; background:#a6793d; border-radius:20px; }
+  #dashboardRoot.client-mode .request-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  #dashboardRoot.client-mode .request-card{ border:1px solid rgba(24,43,33,.14); background:#fff; padding:15px; text-align:left; cursor:pointer; color:#182b21; }
+  #dashboardRoot.client-mode .request-card:hover{ border-color:#a6793d; }
+  #dashboardRoot.client-mode .request-card strong{ display:block; font:500 16px 'Newsreader',Georgia,serif; margin-bottom:4px; }
+  #dashboardRoot.client-mode .request-card span{ color:#5b6b62; font-size:11px; }
+  #dashboardRoot.client-mode .claim-step{ display:flex; gap:10px; padding:9px 0; font-size:13px; border-bottom:1px solid rgba(24,43,33,.1); }
+  #dashboardRoot.client-mode .claim-step:last-child{ border-bottom:0; }
+  #dashboardRoot.client-mode .claim-dot{ width:10px; height:10px; margin-top:4px; flex:none; border-radius:50%; background:#c5cec7; }
+  #dashboardRoot.client-mode .claim-dot.done{ background:#4b6c53; }
+  #dashboardRoot.client-mode .claim-dot.current{ background:#a6793d; box-shadow:0 0 0 4px rgba(166,121,61,.16); }
+  #dashboardRoot.client-mode .request-status{ display:inline-block; background:#dce7de; color:#4b6c53; border-radius:20px; padding:3px 8px; font-size:11px; }
+  @media (max-width:880px){
+    #dashboardRoot.client-mode{ display:block; }
+    .client-sidebar{ display:none; }
+    #dashboardRoot.client-mode #customerDash{ padding:24px 18px 40px; }
+    #dashboardRoot.client-mode .request-grid{ grid-template-columns:1fr; }
+  }
+  @media (max-width:720px){
+    .onboarding-shell{ padding:24px 18px 40px; }
+    .onboarding-header{ display:block; margin-bottom:28px; }
+    .onboarding-header .nav-login{ margin-top:18px; }
+    .onboarding-form{ padding:20px; }
+    .form-grid,.service-options{ grid-template-columns:1fr; }
+    .staff-name-form{ display:block; }
+    .staff-name-form .btn{ margin-top:10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="scene" id="scene">
+  <header class="landing-nav">
+    <div class="brand"><div class="logo-lockup"><svg class="logo-mark" viewBox="0 0 100 100" aria-label="Royal Square Financial logo" role="img"><path fill="#111" d="M48 13a37 37 0 1 0 0 74V72a25 25 0 1 1 0-44V13z"/><path fill="#a52e2b" d="M53 13v74a37 37 0 0 0 0-74v15a25 25 0 0 1 0 44V13z"/><path fill="#111" d="M47 43H20v13h27v14h12V30H47v13z"/></svg><div class="logo-wordmark"><div class="name">ROYAL<span>SQUARE</span></div><div class="tag">FINANCIAL</div></div></div></div>
+    <div class="nav-meta"><div class="secure-mark"><span class="secure-dot"></span> Secure client platform</div><button class="nav-login" onclick="openModal('login')">Log in <span aria-hidden="true">→</span></button></div>
+  </header>
+  <main class="landing-main">
+    <div class="eyebrow">Welcome to RoyalOne</div>
+    <div class="hero-grid">
+      <section>
+        <h1 class="hero-title">Your financial life,<br><em>in one place.</em></h1>
+        <p class="hero-copy">A simpler way to manage your money, protection, family and future. Securely connected to the Royal Square team that knows your world.</p>
+        <div class="hero-actions"><button class="btn primary" onclick="openPersonnelAccess()">Advisory access <span aria-hidden="true">→</span></button><button class="btn" onclick="openOnboarding()">Become a client</button></div>
+      </section>
+      <aside class="hero-visual"><div class="visual-note"><strong>Everything that matters.</strong><span>Plans, policies, documents and advice, gathered around your life.</span></div></aside>
+    </div>
+    <div class="platform-strip"><span><strong>One secure place</strong> for your Royal Square relationship.</span><span>Planning · Protection · Wealth · Advice</span></div>
+    <div class="service-cubes" aria-label="Royal Square service areas">
+      <div class="service-cube planning-cube"><strong>Planning</strong></div>
+      <div class="service-cube protection-cube"><strong>Protection</strong></div>
+      <div class="service-cube wealth-cube"><strong>Wealth</strong></div>
+      <div class="service-cube advice-cube"><strong>Advice</strong></div>
+    </div>
+  </main>
+</div>
+
+<div class="onboarding-root" id="onboardingRoot">
+  <header class="landing-nav">
+    <div class="brand"><div class="logo-lockup"><svg class="logo-mark" viewBox="0 0 100 100" aria-label="Royal Square Financial logo" role="img"><path fill="#111" d="M48 13a37 37 0 1 0 0 74V72a25 25 0 1 1 0-44V13z"/><path fill="#a52e2b" d="M53 13v74a37 37 0 0 0 0-74v15a25 25 0 0 1 0 44V13z"/><path fill="#111" d="M47 43H20v13h27v14h12V30H47v13z"/></svg><div class="logo-wordmark"><div class="name">ROYAL<span>SQUARE</span></div><div class="tag">FINANCIAL</div></div></div></div>
+    <button class="nav-login" onclick="exitOnboarding()">← Back to welcome</button>
+  </header>
+  <main class="onboarding-shell">
+    <div class="eyebrow">New client profile</div>
+    <div class="onboarding-header"><div><h1>Let’s start with your world.</h1><p>Tell us a little about yourself and what you would like help with.</p></div></div>
+    <form class="onboarding-form" onsubmit="submitOnboarding(event)">
+      <fieldset class="form-section"><legend>Your details</legend><div class="form-grid">
+        <div class="field"><label for="clientName">Full name</label><input id="clientName" required placeholder="Your full name" /></div>
+        <div class="field"><label for="clientEmail">Email address</label><input id="clientEmail" type="email" required placeholder="you@example.com" /></div>
+        <div class="field"><label for="clientPhone">Mobile number</label><input id="clientPhone" type="tel" required placeholder=" e.g. 082 123 4567" /></div>
+        <div class="field"><label for="clientCity">City or town</label><input id="clientCity" required placeholder="Where you live" /></div>
+      </div></fieldset>
+      <fieldset class="form-section"><legend>What are you interested in?</legend><p class="form-note">Select all the areas you would like to explore with Royal Square.</p><div class="service-options">
+        <label class="service-option"><input type="checkbox" name="service" value="Financial planning" /> Financial planning</label>
+        <label class="service-option"><input type="checkbox" name="service" value="Life insurance" /> Life insurance</label>
+        <label class="service-option"><input type="checkbox" name="service" value="Short-term insurance" /> Short-term insurance</label>
+        <label class="service-option"><input type="checkbox" name="service" value="Investments" /> Investments and unit trusts</label>
+        <label class="service-option"><input type="checkbox" name="service" value="Property" /> Property</label>
+        <label class="service-option"><input type="checkbox" name="service" value="Family protection" /> Family protection</label>
+      </div></fieldset>
+      <p class="form-note">Your information will be shared securely with the Royal Square team so they can prepare a helpful first conversation.</p>
+      <button class="btn primary" type="submit">Create my client profile →</button>
+      <div class="form-success" id="onboardingSuccess"></div>
+    </form>
+  </main>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <button class="close-x" onclick="closeModal()">✕</button>
+    <h2 id="modalTitle">Log in</h2>
+    <p class="sub">Are you a client or Royal Square Personnel?</p>
+
+    <div class="role-choice">
+      <div class="role-card active" id="roleCustomer" onclick="setRole('customer')">
+        <div class="rc-title">Client</div>
+        <div class="rc-sub">View your finances</div>
+      </div>
+      <div class="role-card" id="roleStaff" onclick="setRole('staff')">
+        <div class="rc-title">Royal Square Personnel</div>
+        <div class="rc-sub">Adviser / staff access</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Email</label>
+      <input type="email" placeholder="you@example.com" />
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" placeholder="••••••••" />
+    </div>
+    <button class="btn primary" onclick="enterDashboard()">Continue</button>
+    <div class="switch-line">
+      <span id="switchText">New here? <a onclick="openModal('register')">Join us</a></span>
+    </div>
+  </div>
+</div>
+
+<div id="dashboardRoot">
+  <div class="top-bar">
+    <div>
+      <div class="name">Royal Square Financial</div>
+      <div class="who" id="whoLine">Customer portal</div>
+    </div>
+    <button onclick="exitDashboard()">Log out</button>
+  </div>
+
+  <aside class="client-sidebar" id="clientSidebar">
+    <div class="client-sidebar-brand">Royal Square<small>Client platform</small></div>
+    <nav aria-label="Client dashboard navigation">
+      <button onclick="showClientView('home')">▦ &nbsp; My dashboard</button>
+      <button onclick="showClientView('goals')">◎ &nbsp; My goals</button>
+      <button onclick="showClientView('reminders')">◷ &nbsp; My reminders</button>
+      <button onclick="showClientView('claims')">◇ &nbsp; Claims</button>
+      <button onclick="showClientView('requests')">□ &nbsp; Requests</button>
+    </nav>
+    <div class="sidebar-status">Secure client space<br>Last synced today</div>
+  </aside>
+
+  <div id="customerDash" class="dash-body">
+
+    <div id="cd-home" class="cd-panel" style="display:block;">
+      <h2 class="dash-greet">👋 Welcome back, M. Radebe</h2>
+      <p class="client-workspace-note">Your Royal Square relationship, organised around what matters to you.</p>
+      <div class="cards" style="margin-top:22px;">
+        <div class="card"><h3>Net worth</h3><div class="big">R 4,218,400</div><div class="data-muted">Assets less liabilities</div></div>
+        <div class="card"><h3>Active policies</h3><div class="big">6</div><div class="data-muted">Across your protection and wealth</div></div>
+        <div class="card"><h3>Open claims</h3><div class="big">1</div><div class="data-muted">Santam · Step 5 of 10</div></div>
+      </div>
+      <div class="nav-grid">
+        <div class="nav-tile" onclick="showClientView('money')"><div class="nt-icon">💰</div><div class="nt-label">My Money</div></div>
+        <div class="nav-tile" onclick="showClientView('insurance')"><div class="nt-icon">🛡️</div><div class="nt-label">My Insurance</div></div>
+        <div class="nav-tile" onclick="showClientView('investments')"><div class="nt-icon">📈</div><div class="nt-label">My Investments</div></div>
+        <div class="nav-tile" onclick="showClientView('property')"><div class="nt-icon">🏠</div><div class="nt-label">My Property</div></div>
+        <div class="nav-tile" onclick="showClientView('family')"><div class="nt-icon">👨‍👩‍👧</div><div class="nt-label">My Family</div></div>
+        <div class="nav-tile" onclick="showClientView('documents')"><div class="nt-icon">📄</div><div class="nt-label">My Documents</div></div>
+        <div class="nav-tile help" onclick="showClientView('help')"><div class="nt-icon">🚨</div><div class="nt-label">I Need Help</div></div>
+        <div class="nav-tile" onclick="showClientView('adviser')"><div class="nt-icon">💬</div><div class="nt-label">Speak to an Adviser</div></div>
+      </div>
+      <div class="client-data-panel"><h3>Goals</h3>
+        <div class="data-row"><div><strong>Retirement at 60</strong><div class="data-muted">R 2,140,000 of R 8,000,000</div><div class="client-bar"><div class="client-bar-fill" style="width:27%;"></div></div></div><strong>27%</strong></div>
+        <div class="data-row"><div><strong>Family home upgrade</strong><div class="data-muted">R 212,500 of R 500,000</div><div class="client-bar"><div class="client-bar-fill" style="width:43%;"></div></div></div><strong>43%</strong></div>
+      </div>
+      <div class="client-data-panel"><h3>Coming up</h3>
+        <div class="data-row"><span>Annual financial review meeting</span><span class="data-muted">14 Oct 2026</span></div>
+        <div class="data-row"><span>Retirement fund fee renewal</span><span class="data-muted">1 Oct 2026</span></div>
+      </div>
+    </div>
+
+    <div id="cd-goals" class="cd-panel">
+      <a class="back-link" onclick="showClientView('home')">← Back</a><h2 class="dash-greet">My goals</h2>
+      <div class="client-data-panel"><h3>Goals tracked toward target</h3>
+        <div class="data-row"><div><strong>Retirement at 60</strong><div class="data-muted">Individual · Thandiwe</div><div class="client-bar"><div class="client-bar-fill" style="width:27%;"></div></div></div><strong>27%</strong></div>
+        <div class="data-row"><div><strong>Family home upgrade</strong><div class="data-muted">Shared · Thandiwe &amp; Sipho</div><div class="client-bar"><div class="client-bar-fill" style="width:43%;"></div></div></div><strong>43%</strong></div>
+        <div class="data-row"><div><strong>Emergency fund</strong><div class="data-muted">R 98,000 of R 150,000</div><div class="client-bar"><div class="client-bar-fill" style="width:65%;"></div></div></div><strong>65%</strong></div>
+      </div>
+    </div>
+
+    <div id="cd-reminders" class="cd-panel">
+      <a class="back-link" onclick="showClientView('home')">← Back</a><h2 class="dash-greet">My reminders</h2>
+      <div class="client-data-panel"><h3>Automated tasks, documents and reviews</h3>
+        <div class="data-row"><span>Retirement fund fee renewal</span><span class="data-muted">1 Oct 2026</span></div>
+        <div class="data-row"><span>Annual financial review meeting</span><span class="data-muted">14 Oct 2026</span></div>
+        <div class="data-row"><span>Insurance valuation certificate</span><span class="data-muted">2 Nov 2026</span></div>
+        <div class="data-row"><span>Driving licence expiry</span><span class="data-muted">11 Apr 2027</span></div>
+      </div>
+    </div>
+
+    <div id="cd-claims" class="cd-panel">
+      <a class="back-link" onclick="showClientView('home')">← Back</a><h2 class="dash-greet">Claims</h2>
+      <div class="client-data-panel"><h3>Santam — Audi Q5 (2023)</h3><div class="data-muted">Claim SNT-88213-2026 · Handler: Andile Khumalo</div>
+        <div class="claim-step"><span class="claim-dot done"></span><span>Accident reported via app</span></div><div class="claim-step"><span class="claim-dot done"></span><span>Claim registered with Santam</span></div><div class="claim-step"><span class="claim-dot done"></span><span>Vehicle assessment received</span></div><div class="claim-step"><span class="claim-dot current"></span><span><strong>Repair quote submitted for authorisation</strong></span></div><div class="claim-step"><span class="claim-dot"></span><span>Repairs authorised and scheduled</span></div>
+      </div>
+    </div>
+
+    <div id="cd-requests" class="cd-panel">
+      <a class="back-link" onclick="showClientView('home')">← Back</a><h2 class="dash-greet">Requests</h2>
+      <div class="client-data-panel"><h3>Start a request</h3><div class="request-grid">
+        <button class="request-card" onclick="showClientView('adviser')"><strong>Request a consultation</strong><span>Book time with your adviser.</span></button><button class="request-card" onclick="showClientView('documents')"><strong>Request a policy document</strong><span>Get a copy of an active policy.</span></button><button class="request-card" onclick="showClientView('documents')"><strong>Submit client information</strong><span>Update your financial profile.</span></button><button class="request-card" onclick="showClientView('adviser')"><strong>Change of address</strong><span>Update your linked policies.</span></button><button class="request-card" onclick="showClientView('adviser')"><strong>Change of bank details</strong><span>Update premium collection details.</span></button><button class="request-card" onclick="showClientView('adviser')"><strong>Request an IRP5</strong><span>Request a tax certificate.</span></button>
+      </div></div>
+      <div class="client-data-panel"><h3>Recent requests</h3><div class="data-row"><span>Request an IRP5 <span class="data-muted">· Allan Gray</span></span><span class="request-status">Complete</span></div><div class="data-row"><span>Change of address</span><span class="request-status">Sent to provider</span></div></div>
+    </div>
+
+    <div id="cd-money" class="cd-panel">
+      <a class="back-link" onclick="showClientView('home')">← Back</a>
+      <h2 class="dash-greet">My Money</h2>
+      <div class="cards">
+        <div class="card"><h3>Net worth</h3><div class="big">R 4,218,400</div></div>
+        <div class="card"><h3>Goals</h3><ul>
+          <li><span>Retirement at 60</span><span>35%</span></li>
+          <li><span>Kids' education fund</span><span>72%</span></li>
+        </ul></div>
+        <div class="card"><h3>Reminders</h3><ul>
+          <li><span>Driving licence expiry</span><span>Overdue</span></li>
+          <li><span>Valuation certificate</span><span>Sep 18</span></li>
+        </ul></div>
+      </div>
+    </div>
+
+    <div id="cd-insurance" class="cd-panel">
+      <a class="back-link" onclick="showClientView('home')">← Back</a>
+      <h2 class="dash-greet">My Insurance</h2>
+      <div class="cards">
+        <div class="card"><h3>Active policies</h3><ul>
+          <li><span>Motor — Santam</span><span>Active</span></li>
+          <li><span>Life cover — Sanlam</span><span>Active</span></li>
+        </ul></div>
+        <div class="card"><h3>Open claims</h3><ul>
+          <li><span>CLM-58213 · Santam</span><span>Assessment</span></li>
+        </ul></div>
+      </div>
+    </div>
+
+    <div id="cd-investments" class="cd-panel">
+      <a class="back-link" onclick="showClientView('home')">← Back</a>
+      <h2 class="dash-greet">My Investments</h2>
+      <div class="cards">
+        <div class="card"><h3>Unit trusts</h3><div class="big">R 980,000</div></div>
+        <div class="card"><h3>Shares &amp; equities</h3><div class="big">R 412,000</div></div>
+      </div>
+    </div>
+
+    <div id="cd-property" class="cd-panel">
+      <a class="back-link" onclick="showClientView('home')">← Back</a>
+      <h2 class="dash-greet">My Property</h2>
+      <div class="cards">
+        <div class="card"><h3>Property equity</h3><div class="big">R 860,000</div></div>
+      </div>
+    </div>
+
+    <div id="cd-family" class="cd-panel">
+      <a class="back-link" onclick="showClientView('home')">← Back</a>
+      <h2 class="dash-greet">My Family</h2>
+      <div class="cards">
+        <div class="card"><h3>Beneficiaries</h3><ul>
+          <li><span>Spouse — primary</span><span>Confirmed</span></li>
+          <li><span>2 children — secondary</span><span>Confirmed</span></li>
+        </ul></div>
+        <div class="card"><h3>Funeral plan</h3><ul><li><span>Family plan — Sanlam</span><span>Active</span></li></ul></div>
+      </div>
+    </div>
+
+    <div id="cd-documents" class="cd-panel">
+      <a class="back-link" onclick="showClientView('home')">← Back</a>
+      <h2 class="dash-greet">My Documents</h2>
+      <div class="cards">
+        <div class="card"><h3>Identity</h3><ul>
+          <li><span>ID document</span><span>On file</span></li>
+          <li><span>Proof of address</span><span>On file</span></li>
+        </ul></div>
+        <div class="card"><h3>Insurance</h3><ul>
+          <li><span>Policy schedule</span><span>On file</span></li>
+          <li><span>Valuation certificate</span><span>Missing</span></li>
+        </ul></div>
+      </div>
+    </div>
+
+    <div id="cd-adviser" class="cd-panel">
+      <a class="back-link" onclick="showClientView('home')">← Back</a>
+      <h2 class="dash-greet">Speak to an Adviser</h2>
+      <div class="card" style="max-width:420px;">
+        <h3>Your adviser</h3>
+        <div style="font-size:15px;color:#22283A;margin-bottom:4px;">Qiniso Ntuli</div>
+        <div style="font-size:13px;color:#9A9382;margin-bottom:14px;">Response time: within 1 business day</div>
+        <textarea placeholder="What would you like to ask?" style="width:100%;min-height:80px;padding:10px;border:1px solid #DCD6C6;border-radius:2px;font-family:inherit;font-size:14px;"></textarea>
+        <button class="btn primary" style="margin-top:10px;">Send message</button>
+      </div>
+    </div>
+
+    <div id="cd-help" class="cd-panel">
+      <a class="back-link" onclick="showClientView('home')">← Back</a>
+      <h2 class="dash-greet">What happened?</h2>
+      <div class="incident-grid">
+        <div class="incident-tile" onclick="startAccidentMode()"><div class="nt-icon">🚗</div>Vehicle accident</div>
+        <div class="incident-tile" onclick="showComingSoon('Property damage')"><div class="nt-icon">🏠</div>Property damage</div>
+        <div class="incident-tile" onclick="showComingSoon('Financial problem')"><div class="nt-icon">💳</div>Financial problem</div>
+        <div class="incident-tile" onclick="showComingSoon('Family emergency')"><div class="nt-icon">👨‍👩‍👧</div>Family emergency</div>
+        <div class="incident-tile" onclick="showComingSoon('Document problem')"><div class="nt-icon">📄</div>Document problem</div>
+        <div class="incident-tile" onclick="showClientView('adviser')"><div class="nt-icon">❓</div>Something else</div>
+      </div>
+      <div id="comingSoonNote" style="display:none;margin-top:16px;font-size:13px;color:#9A9382;"></div>
+    </div>
+
+    <div id="cd-accident-safety" class="cd-panel">
+      <h2 class="dash-greet">Are you safe?</h2>
+      <p class="step-lead">This tells us whether to prioritise emergency assistance before anything else.</p>
+      <div class="safety-choice">
+        <button class="btn primary" onclick="accidentSafe(true)">🟢 Yes</button>
+        <button class="btn" onclick="accidentSafe(false)">🔴 No</button>
+      </div>
+    </div>
+
+    <div id="cd-accident-emergency" class="cd-panel">
+      <h2 class="dash-greet">Help is being prioritised</h2>
+      <p class="step-lead">We're connecting you to emergency assistance and notifying Royal Square directly. Documentation can wait until you're safe.</p>
+      <button class="btn" onclick="showClientView('home')">Back to home</button>
+    </div>
+
+    <div id="cd-accident-capture" class="cd-panel">
+      <h2 class="dash-greet">Let's document what happened</h2>
+      <p class="step-lead">You don't need to know what the insurer wants — just work through this list.</p>
+      <div class="capture-list">
+        <div class="capture-item" onclick="captureItem(this)">📸 Take a picture of your vehicle</div>
+        <div class="capture-item" onclick="captureItem(this)">📸 Take a picture of the other vehicle</div>
+        <div class="capture-item" onclick="captureItem(this)">📸 Take a picture of the surrounding area</div>
+        <div class="capture-item" onclick="captureItem(this)">📍 Capture accident location</div>
+      </div>
+      <div class="field" style="margin-top:14px;max-width:420px;">
+        <label>Tell us what happened</label>
+        <textarea id="accidentDesc" oninput="checkCaptureComplete()" placeholder="Briefly describe the accident..." style="width:100%;min-height:70px;padding:10px;border:1px solid #DCD6C6;border-radius:2px;font-family:inherit;font-size:14px;"></textarea>
+      </div>
+      <button class="btn primary" id="captureContinueBtn" disabled style="margin-top:14px;opacity:0.4;" onclick="buildClaim()">Continue</button>
+    </div>
+
+    <div id="cd-accident-building" class="cd-panel">
+      <h2 class="dash-greet">Building your claim</h2>
+      <p class="step-lead" id="buildingStatus">Matching your policy information…</p>
+      <div class="progress-bar-mini"><div class="progress-fill" id="buildProgressFill"></div></div>
+    </div>
+
+    <div id="cd-accident-review" class="cd-panel">
+      <h2 class="dash-greet">✅ Your claim information is complete</h2>
+      <div class="claim-summary">
+        <div><span>Policy</span><span>Motor — Santam</span></div>
+        <div><span>Photos attached</span><span>3</span></div>
+        <div><span>Location</span><span>Captured</span></div>
+        <div><span>Description</span><span>Attached</span></div>
+      </div>
+      <button class="btn primary" style="margin-top:16px;" onclick="submitClaim()">Submit claim</button>
+    </div>
+
+    <div id="cd-accident-done" class="cd-panel">
+      <h2 class="dash-greet">Claim submitted</h2>
+      <div class="ref-badge">
+        <div class="ref-num" id="refNum">RSF-0000</div>
+        <div class="ref-status">Status: Under review</div>
+      </div>
+      <button class="btn" style="margin-top:20px;" onclick="showClientView('home')">Back to home</button>
+    </div>
+
+  </div>
+
+  <div id="staffDash" class="dash-body" style="display:none;">
+    <h2 style="font-family:Georgia,serif;font-weight:normal;color:#22283A;">Good morning, Royal Square Personnel</h2>
+    <p class="staff-intro">Set your name before working on advisory requests so every client conversation is assigned to the right Royal Square person.</p>
+    <form class="staff-name-form" onsubmit="saveStaffName(event)">
+      <div class="field"><label for="staffName">Personnel name</label><input id="staffName" required placeholder="Enter your full name" /></div>
+      <button class="btn primary" type="submit">Save name</button>
+    </form>
+    <div class="staff-identity" id="staffIdentity">No personnel name added yet.</div>
+    <div class="cards">
+      <div class="card">
+        <h3>Clients under management</h3>
+        <div class="big">42</div>
+      </div>
+      <div class="card">
+        <h3>Tasks due this week</h3>
+        <ul>
+          <li><span>Annual review — M. Radebe</span><span>Oct 2</span></li>
+          <li><span>Retirement fee renewal — T. Dlamini</span><span>Sep 30</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Open claims to progress</h3>
+        <ul>
+          <li><span>CLM-58213 · Santam</span><span>Awaiting quotes</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>New leads</h3>
+        <ul>
+          <li><span>Referral — B. Mokoena</span><span>Unassigned</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Advisory requests</h3>
+        <ul>
+          <li><span>Family protection — M. Radebe</span><span id="advisoryOwner">Needs owner</span></li>
+          <li><span>Retirement planning — A. Molefe</span><span>New</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let selectedRole = 'customer';
+  let staffName = '';
+
+  function openPersonnelAccess(){
+    selectedRole = 'staff';
+    openModal('login');
+    setRole('staff');
+  }
+
+  function openOnboarding(){
+    document.getElementById('scene').style.display = 'none';
+    document.getElementById('onboardingRoot').classList.add('show');
+  }
+
+  function exitOnboarding(){
+    document.getElementById('onboardingRoot').classList.remove('show');
+    document.getElementById('scene').style.display = 'block';
+  }
+
+  function submitOnboarding(event){
+    event.preventDefault();
+    const name = document.getElementById('clientName').value.trim();
+    const services = Array.from(document.querySelectorAll('input[name="service"]:checked')).map(input => input.value);
+    const success = document.getElementById('onboardingSuccess');
+    success.textContent = services.length
+      ? `Thanks, ${name}. Your profile is ready and your interests in ${services.join(', ')} have been sent to Royal Square.`
+      : `Thanks, ${name}. Your client profile is ready. A Royal Square person will contact you to understand what you need.`;
+    success.classList.add('show');
+  }
+
+  function saveStaffName(event){
+    event.preventDefault();
+    staffName = document.getElementById('staffName').value.trim();
+    document.getElementById('staffIdentity').textContent = `Advisory requests assigned to ${staffName}.`;
+    document.getElementById('advisoryOwner').textContent = staffName;
+  }
+
+  function setRole(role){
+    selectedRole = role;
+    document.getElementById('roleCustomer').classList.toggle('active', role==='customer');
+    document.getElementById('roleStaff').classList.toggle('active', role==='staff');
+  }
+
+  function openModal(mode){
+    document.getElementById('overlay').classList.add('show');
+    document.getElementById('modalTitle').textContent = mode === 'register' ? 'Join us' : 'Log in';
+    document.getElementById('switchText').innerHTML = mode === 'register'
+      ? 'Already with us? <a onclick="openModal(\'login\')">Log in</a>'
+      : 'New here? <a onclick="openModal(\'register\')">Join us</a>';
+  }
+  function closeModal(){
+    document.getElementById('overlay').classList.remove('show');
+  }
+
+  function enterDashboard(){
+    closeModal();
+    document.getElementById('scene').style.display = 'none';
+    document.getElementById('dashboardRoot').classList.add('show');
+    const isStaff = selectedRole === 'staff';
+    document.getElementById('dashboardRoot').classList.toggle('client-mode', !isStaff);
+    document.getElementById('customerDash').style.display = isStaff ? 'none' : 'block';
+    document.getElementById('staffDash').style.display = isStaff ? 'block' : 'none';
+    document.getElementById('whoLine').textContent = isStaff ? 'Royal Square Personnel portal' : 'Client portal';
+    if (isStaff && staffName) {
+      document.getElementById('staffName').value = staffName;
+      document.getElementById('staffIdentity').textContent = `Advisory requests assigned to ${staffName}.`;
+      document.getElementById('advisoryOwner').textContent = staffName;
+    }
+    if (!isStaff) showClientView('home');
+  }
+  function exitDashboard(){
+    document.getElementById('dashboardRoot').classList.remove('show');
+    document.getElementById('dashboardRoot').classList.remove('client-mode');
+    document.getElementById('onboardingRoot').classList.remove('show');
+    document.getElementById('scene').style.display = 'block';
+    showClientView('home');
+  }
+
+  // ---- Client-side life-based navigation ----
+  const CLIENT_PANELS = ['home','money','insurance','investments','property','family','documents','adviser','help','goals','reminders','claims','requests',
+    'accident-safety','accident-emergency','accident-capture','accident-building','accident-review','accident-done'];
+
+  function hideAllClientPanels(){
+    CLIENT_PANELS.forEach(p => {
+      const el = document.getElementById('cd-' + p);
+      if (el) el.style.display = 'none';
+    });
+  }
+
+  function showClientView(view){
+    hideAllClientPanels();
+    document.getElementById('cd-' + view).style.display = 'block';
+    document.getElementById('comingSoonNote').style.display = 'none';
+  }
+
+  function showComingSoon(label){
+    const note = document.getElementById('comingSoonNote');
+    note.textContent = label + " isn't wired up in this prototype yet — in the full build it would run its own guided flow, the same way a vehicle accident does.";
+    note.style.display = 'block';
+  }
+
+  // ---- Accident Mode ----
+  function startAccidentMode(){
+    document.querySelectorAll('.capture-item').forEach(el => el.classList.remove('done'));
+    document.getElementById('accidentDesc').value = '';
+    checkCaptureComplete();
+    hideAllClientPanels();
+    document.getElementById('cd-accident-safety').style.display = 'block';
+  }
+
+  function accidentSafe(isSafe){
+    hideAllClientPanels();
+    document.getElementById(isSafe ? 'cd-accident-capture' : 'cd-accident-emergency').style.display = 'block';
+  }
+
+  function captureItem(el){
+    el.classList.toggle('done');
+    checkCaptureComplete();
+  }
+
+  function checkCaptureComplete(){
+    const total = document.querySelectorAll('.capture-item').length;
+    const done = document.querySelectorAll('.capture-item.done').length;
+    const hasDesc = document.getElementById('accidentDesc').value.trim().length > 0;
+    const btn = document.getElementById('captureContinueBtn');
+    const ready = done === total && hasDesc;
+    btn.disabled = !ready;
+    btn.style.opacity = ready ? '1' : '0.4';
+  }
+
+  function buildClaim(){
+    hideAllClientPanels();
+    document.getElementById('cd-accident-building').style.display = 'block';
+    const fill = document.getElementById('buildProgressFill');
+    const status = document.getElementById('buildingStatus');
+    const stages = [
+      'Matching your policy information…',
+      'Attaching your photos and location…',
+      'Preparing required documents…',
+      'Validating your claim…',
+    ];
+    let i = 0;
+    fill.style.width = '0%';
+    status.textContent = stages[0];
+    const interval = setInterval(() => {
+      i++;
+      fill.style.width = Math.min(100, i * 25) + '%';
+      if (stages[i]) status.textContent = stages[i];
+      if (i >= 4) {
+        clearInterval(interval);
+        setTimeout(() => {
+          hideAllClientPanels();
+          document.getElementById('cd-accident-review').style.display = 'block';
+        }, 400);
+      }
+    }, 550);
+  }
+
+  function submitClaim(){
+    document.getElementById('refNum').textContent = 'RSF-' + Math.floor(1000 + Math.random() * 9000);
+    hideAllClientPanels();
+    document.getElementById('cd-accident-done').style.display = 'block';
+  }
+
+</script>
+
+</body>
+</html>
